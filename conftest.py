@@ -18,13 +18,9 @@ def browser_context():
             context = browser.new_context()
             page = context.new_page()
             
-            # Navigate to the organization login portal
-            page.goto("https://portal.agamimp.net/")
-            
-            # Pause execution to allow user to complete Multi-Factor Authentication (MFA)
+            page.goto("https://portal.agamimp.net/application/66f13eebe5a555c71f580633?environment=%D7%A1%D7%91%D7%99%D7%91%D7%94%20%D7%9E%D7%91%D7%A6%D7%A2%D7%99%D7%AA")      
             page.pause()
             
-            # Save storage state containing session tokens and cookies
             context.storage_state(path=AUTH_FILE)
             
         yield context
@@ -37,30 +33,25 @@ def auth_page(browser_context, request):
     context = browser_context
     context.tracing.start(screenshots=True, snapshots=True, sources=True)
     
-    # Enable video recording for the page session
     page = context.new_page()
     page.set_viewport_size({"width": 1920, "height": 1080})
     
     yield page
-    
-    # Handle video and screenshot logging if a test failure occurs
+    #
     video = page.video
     test_failed = request.node.rep_call.failed if hasattr(request.node, "rep_call") else False
     
     if test_failed:
-        # Capture screenshot at point of failure
         screenshot_dir = "test-results/screenshots"
         os.makedirs(screenshot_dir, exist_ok=True)
         page.screenshot(path=f"{screenshot_dir}/{request.node.name}.png")
         
-        # Keep video file and rename it appropriately
         if video:
             video_path = video.path()
             video_dir = "test-results/videos"
             os.makedirs(video_dir, exist_ok=True)
             os.replace(video_path, f"{video_dir}/{request.node.name}_FAILED.webm")
     else:
-        # Delete temporary video files for successful tests to save disk space
         if video:
             try:
                 os.remove(video.path())
