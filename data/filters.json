@@ -1,0 +1,17 @@
+{
+  "districts": {
+    "dan": "מחוז דן",
+    "south": "מחוז דרום",
+    "north": "מחוז צפון"
+  },
+  "categories": {
+    "truck": "משאית"
+  },
+  "sources": {
+    "organic": "אורגני"
+  },
+  "sub_units": {
+    "lachish": "נפת לכיש 8674",
+    "sharon": "נפת השרון 9770"
+  }
+}
