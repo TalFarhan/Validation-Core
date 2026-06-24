@@ -29,17 +29,5 @@ class Settings:
     SLOW_MO = int(_env("SLOW_MO", "0"))
     PAUSE_ON_FAILURE = _env("PAUSE_ON_FAILURE", "false").lower() == "true"
 
-    DB_SERVER = _env("DB_SERVER")
-    DB_NAME = _env("DB_NAME")
-    DB_USER = _env("DB_USER")
-    DB_PASSWORD = _env("DB_PASSWORD")
-    DB_DRIVER = _env("DB_DRIVER")
-    DB_AUTH = _env("DB_AUTH", "aad_password")
-    DB_MODE = _env("DB_MODE", "live")
-    DB_SNAPSHOT_FILE = _env("DB_SNAPSHOT_FILE", "db_snapshot.json")
-    DB_CONNECTION_STRING = _env("DB_CONNECTION_STRING")
-    VEHICLE_DIM_TABLE = _env("VEHICLE_DIM_TABLE", "[DIM].[Vehicle]")
-    DB_ENABLED = _env("DB_ENABLED", "false").lower() == "true"
-
 
 settings = Settings()

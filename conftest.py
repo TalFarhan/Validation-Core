@@ -18,12 +18,6 @@ def filter_data():
 
 
 @pytest.fixture(scope="session")
-def vehicle_data():
-    with open(DATA_DIR / "vehicles.json", encoding="utf-8") as file:
-        return json.load(file)
-
-
-@pytest.fixture(scope="session")
 def browser_context():
     """Initializes the browser, handles auth state, and configures video recording."""
     with sync_playwright() as playwright:
@@ -103,17 +97,6 @@ def dashboard(auth_page):
     page_obj = MainDashboardPage(auth_page)
     page_obj.navigate()
     return page_obj
-
-
-@pytest.fixture
-def db_client():
-    """Provides a database client for data validation tests."""
-    from db.client import DatabaseClient
-
-    if not settings.DB_ENABLED:
-        pytest.skip("DB tests disabled. Set DB_ENABLED=true when QA DB is available.")
-
-    return DatabaseClient()
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
