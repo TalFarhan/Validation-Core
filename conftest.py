@@ -18,10 +18,19 @@ def filter_data():
 
 
 @pytest.fixture(scope="session")
+def vehicle_data():
+    with open(DATA_DIR / "vehicles.json", encoding="utf-8") as file:
+        return json.load(file)
+
+
+@pytest.fixture(scope="session")
 def browser_context():
     """Initializes the browser, handles auth state, and configures video recording."""
     with sync_playwright() as playwright:
-        browser = playwright.chromium.launch(headless=settings.HEADLESS)
+        browser = playwright.chromium.launch(
+            headless=settings.HEADLESS,
+            slow_mo=settings.SLOW_MO or None,
+        )
 
         context_options = {
             "record_video_dir": "test-results/videos",
@@ -67,6 +76,9 @@ def auth_page(browser_context, request):
         os.makedirs("test-results/traces", exist_ok=True)
         trace_path = f"test-results/traces/{request.node.name}.zip"
         browser_context.tracing.stop(path=trace_path)
+
+        if settings.PAUSE_ON_FAILURE:
+            page.pause()
     else:
         browser_context.tracing.stop()
 

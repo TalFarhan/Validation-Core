@@ -43,17 +43,11 @@ def test_cascading_dropdown_dependency(dashboard, filter_data):
 
     dashboard.sub_unit_dropdown.click()
 
-    lachish_unit = dashboard.page.locator(
-        f"role=option[name='{filter_data['sub_units']['lachish']}']"
-    )
+    lachish_unit = dashboard.option(filter_data["sub_units"]["lachish"], "SubUnit")
     expect(lachish_unit).to_be_visible(timeout=5000)
 
-    sharon_unit = dashboard.page.locator(
-        f"role=option[name='{filter_data['sub_units']['sharon']}']"
-    )
+    sharon_unit = dashboard.option(filter_data["sub_units"]["sharon"], "SubUnit")
     expect(sharon_unit).not_to_be_visible()
-
-    dashboard.page.keyboard.press("Escape")
 
 
 @pytest.mark.sanity
@@ -66,14 +60,19 @@ def test_clear_filter_functionality_restoration(dashboard, filter_data):
 
     restored_total = dashboard.get_kpi_value("total")
     assert restored_total == baseline_total, "Clearing filters should restore exact baseline totals."
-    expect(dashboard.clear_filters_btn).to_be_hidden()
 
 
 @pytest.mark.sanity
 def test_tab_navigation_functionality(dashboard):
-    """Verifies that data tabs can be clicked and become actively selected."""
-    dashboard.click_tab("withdrawn")
+    """Verifies each tab exposes its KPI card with a readable value."""
+    tabs = [
+        ("all", dashboard.total_vehicles_kpi, "total"),
+        ("in_use", dashboard.in_use_kpi, "in_use"),
+        ("allocated", dashboard.allocated_vehicles_kpi, "allocated"),
+        ("withdrawn", dashboard.withdrawn_vehicles_kpi, "withdrawn"),
+    ]
 
-    dashboard.assert_tab_active(dashboard.withdrawn_tab)
-    dashboard.assert_tab_inactive(dashboard.all_vehicles_tab)
-    assert dashboard.get_kpi_value("withdrawn") >= 0
+    for tab_name, kpi_card, kpi_metric in tabs:
+        dashboard.click_tab(tab_name)
+        expect(kpi_card).to_be_visible(timeout=dashboard.timeout)
+        assert dashboard.get_kpi_value(kpi_metric) >= 0

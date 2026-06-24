@@ -8,10 +8,11 @@
     "truck": "משאית"
   },
   "sources": {
-    "organic": "אורגני"
+    "organic": "יר\"ם",
+    "transport_center": "מרכז הובלה"
   },
   "sub_units": {
-    "lachish": "נפת לכיש 8674",
+    "lachish": "יקל\"רים לכיש 9010",
     "sharon": "נפת השרון 9770"
   }
 }
