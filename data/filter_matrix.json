@@ -1,0 +1,16 @@
+{
+  "single_filters": [
+    {"district": "dan"},
+    {"district": "south"},
+    {"district": "north"},
+    {"category": "truck"},
+    {"source": "organic"},
+    {"source": "transport_center"}
+  ],
+  "combined_filters": [
+    {"district": "dan", "category": "truck"},
+    {"district": "dan", "source": "organic"},
+    {"district": "south", "sub_unit": "lachish"},
+    {"district": "north", "category": "truck", "source": "transport_center"}
+  ]
+}

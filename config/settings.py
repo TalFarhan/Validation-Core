@@ -12,6 +12,14 @@ def _env(key: str, default: str = "") -> str:
 
 
 class Settings:
+    DB_SERVER = _env("DB_SERVER", r"localhost\SQLEXPRESS")
+    DB_NAME = _env("DB_NAME", "QA_Fleet_DB")
+    DB_DRIVER = _env("DB_DRIVER", "ODBC Driver 17 for SQL Server")
+    DB_TABLE = _env("DB_TABLE", "DIM_Vehicle")
+    DB_ENVIRONMENT = _env("DB_ENVIRONMENT", "מבצעי")
+    DB_HAS_ALLOCATED = _env("DB_HAS_ALLOCATED", "false").lower() == "true"
+    DB_CSV_PATH = _env("DB_CSV_PATH", "data/raw/Vehicle.csv")
+
     LOGIN_URL = _env(
         "LOGIN_URL",
         "https://portal.agamimp.net/application/66f13eebe5a555c71f580633"
