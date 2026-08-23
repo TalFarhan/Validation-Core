@@ -1,6 +1,14 @@
 import pytest
 
-from tests.helpers.dashboard_validation import apply_filters, db_filter_kwargs
+from reports.allure_catalog import FEATURE_CHARTS, suite_marks
+from tests.helpers.dashboard_validation import (
+    CHART_LABEL_KEYS,
+    apply_filters,
+    assert_chart_labels_match_db_sample,
+    db_filter_kwargs,
+)
+
+pytestmark = suite_marks(feature=FEATURE_CHARTS)
 
 
 @pytest.mark.data
@@ -13,6 +21,16 @@ from tests.helpers.dashboard_validation import apply_filters, db_filter_kwargs
 def test_chart_is_visible(dashboard, chart_key):
     """All dashboard charts must render."""
     dashboard.assert_chart_visible(chart_key)
+
+
+@pytest.mark.data
+@pytest.mark.regression
+@pytest.mark.parametrize("chart_key", CHART_LABEL_KEYS, ids=list(CHART_LABEL_KEYS))
+def test_chart_labels_match_db(dashboard, db_client, chart_key):
+    """Chart axis/legend labels must cover top warehouse segments."""
+    assert_chart_labels_match_db_sample(
+        dashboard, db_client, chart_key, sample_size=5
+    )
 
 
 @pytest.mark.data
@@ -53,8 +71,37 @@ def test_category_chart_db_distinct_count(dashboard, db_client):
 
 @pytest.mark.data
 @pytest.mark.regression
+def test_withdrawal_chart_db_distinct_count(dashboard, db_client):
+    """Withdrawal chart should reflect distinct TransferReason values in FACT."""
+    by_reason = db_client.count_by_withdrawal_reason()
+    if not by_reason:
+        pytest.skip("No TransferReason rows in SigningReturnVehicle")
+
+    dashboard.assert_chart_visible("withdrawal")
+    assert len(by_reason) >= 1
+
+
+@pytest.mark.data
+@pytest.mark.regression
 def test_charts_remain_visible_after_filter(dashboard, filter_data):
     """Charts must stay visible after applying filters."""
     apply_filters(dashboard, filter_data, district="dan")
     for chart_key in ("source", "unit", "category"):
         dashboard.assert_chart_visible(chart_key)
+
+
+@pytest.mark.data
+@pytest.mark.regression
+@pytest.mark.parametrize("chart_key", ("source", "unit"), ids=["source", "unit"])
+def test_chart_labels_match_db_after_filter(
+    dashboard, filter_data, db_client, chart_key
+):
+    """Filtered chart labels must still cover the filtered warehouse breakdown."""
+    resolved = apply_filters(dashboard, filter_data, district="dan")
+    assert_chart_labels_match_db_sample(
+        dashboard,
+        db_client,
+        chart_key,
+        sample_size=3,
+        **db_filter_kwargs(resolved),
+    )

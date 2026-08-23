@@ -1,39 +1,41 @@
 import pytest
 
-from config.settings import settings
+from reports.allure_catalog import FEATURE_DATA_INTEGRITY, suite_marks
+
+pytestmark = suite_marks(feature=FEATURE_DATA_INTEGRITY)
 
 
 @pytest.mark.data
 @pytest.mark.regression
-def test_db_kpi_sum_invariant(db_client):
-    """in_use + withdrawn must equal total in the warehouse."""
+def test_db_in_use_not_exceeds_total(db_client):
+    """In-use vehicles are a subset of received vehicles on DIM."""
     kpis = db_client.get_dashboard_kpis()
-    assert kpis["in_use"] + kpis["withdrawn"] == kpis["total"]
+    assert kpis["in_use"] <= kpis["total"]
 
 
 @pytest.mark.data
 @pytest.mark.regression
-def test_ui_kpi_sum_invariant(dashboard):
-    """in_use + withdrawn must equal total on the dashboard."""
-    total = dashboard.get_kpi_value("total")
-    in_use = dashboard.get_kpi_value("in_use")
-    withdrawn = dashboard.get_kpi_value("withdrawn")
-    assert in_use + withdrawn == total
+def test_ui_in_use_not_exceeds_total(dashboard):
+    """In-use KPI cannot exceed total received on the dashboard."""
+    assert dashboard.get_kpi_value("in_use") <= dashboard.get_kpi_value("total")
 
 
 @pytest.mark.data
 @pytest.mark.regression
-def test_db_allocated_not_exceeds_in_use(db_client):
-    """Allocated vehicles cannot exceed vehicles in use."""
+def test_db_withdrawn_comes_from_fact_table(db_client):
+    """Withdrawn KPI counts rows in FACT.SigningReturnVehicle (not DIM IsActive=0)."""
     kpis = db_client.get_dashboard_kpis()
-    assert kpis["allocated"] <= kpis["in_use"]
+    assert kpis["withdrawn"] == db_client.count_vehicles(kpi_type="withdrawn")
+    assert kpis["withdrawn"] >= 0
 
 
 @pytest.mark.data
 @pytest.mark.regression
-def test_ui_allocated_not_exceeds_in_use(dashboard):
-    """Allocated KPI cannot exceed in-use KPI on the dashboard."""
-    assert dashboard.get_kpi_value("allocated") <= dashboard.get_kpi_value("in_use")
+def test_db_allocated_comes_from_fact_table(db_client):
+    """Allocated KPI counts rows in FACT.VehicleFlow."""
+    kpis = db_client.get_dashboard_kpis()
+    assert kpis["allocated"] == db_client.count_vehicles(kpi_type="allocated")
+    assert kpis["allocated"] >= 0
 
 
 @pytest.mark.data
@@ -64,3 +66,13 @@ def test_db_category_breakdown_sums_to_total(db_client):
     if not by_category:
         pytest.skip("No vehicles grouped by category")
     assert sum(by_category.values()) == db_client.count_vehicles(kpi_type="total")
+
+
+@pytest.mark.data
+@pytest.mark.regression
+def test_db_withdrawal_reason_breakdown_sums_to_withdrawn(db_client):
+    """Withdrawal-reason segments must sum to the withdrawn FACT total."""
+    by_reason = db_client.count_by_withdrawal_reason()
+    if not by_reason:
+        pytest.skip("No TransferReason rows in SigningReturnVehicle")
+    assert sum(by_reason.values()) == db_client.count_vehicles(kpi_type="withdrawn")

@@ -3,12 +3,16 @@ from pathlib import Path
 
 import pytest
 
+from reports.allure_catalog import FEATURE_FILTER_COMBINATIONS, suite_marks
+from reports.test_run_report import get_current_report
 from tests.helpers.dashboard_validation import (
     KPI_TYPES,
     assert_all_kpis_match_db,
     apply_filters,
     db_filter_kwargs,
 )
+
+pytestmark = suite_marks(feature=FEATURE_FILTER_COMBINATIONS)
 
 MATRIX_PATH = Path(__file__).resolve().parents[2] / "data" / "filter_matrix.json"
 
@@ -53,17 +57,26 @@ def test_north_truck_transport_center_matches_db(
     db_filters = db_filter_kwargs(resolved)
     ui_value = dashboard.get_kpi_value(kpi_type)
     db_value = db_client.count_vehicles(kpi_type=kpi_type, **db_filters)
+    report = get_current_report()
+    if report is not None:
+        report.log_assertion(
+            label=f"KPI '{kpi_type}'",
+            ui_value=ui_value,
+            db_value=db_value,
+            passed=ui_value == db_value,
+            filters=db_filters,
+        )
     assert ui_value == db_value
 
 
 @pytest.mark.data
 @pytest.mark.regression
-def test_south_sub_unit_lachish_matches_db(dashboard, filter_data, db_client):
-    """South district with Lachish sub-unit must match DB baseline KPIs."""
+def test_south_sub_unit_matches_db(dashboard, filter_data, db_client):
+    """South district with its SubUnit must match DB baseline KPIs."""
     resolved = apply_filters(
         dashboard,
         filter_data,
         district="south",
-        sub_unit="lachish",
+        sub_unit="south",
     )
     assert_all_kpis_match_db(dashboard, db_client, **db_filter_kwargs(resolved))

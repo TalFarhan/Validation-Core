@@ -1,6 +1,10 @@
 import pytest
 from playwright.sync_api import expect
 
+from reports.allure_catalog import FEATURE_UI_FILTERS, suite_marks
+
+pytestmark = suite_marks(feature=FEATURE_UI_FILTERS)
+
 
 @pytest.mark.sanity
 def test_basic_district_and_category_filtering(dashboard, filter_data):
@@ -43,11 +47,12 @@ def test_cascading_dropdown_dependency(dashboard, filter_data):
 
     dashboard.sub_unit_dropdown.click()
 
-    lachish_unit = dashboard.option(filter_data["sub_units"]["lachish"], "SubUnit")
-    expect(lachish_unit).to_be_visible(timeout=5000)
+    south_sub_unit = dashboard.option(filter_data["sub_units"]["south"], "SubUnit")
+    expect(south_sub_unit).to_be_visible(timeout=5000)
 
-    sharon_unit = dashboard.option(filter_data["sub_units"]["sharon"], "SubUnit")
-    expect(sharon_unit).not_to_be_visible()
+    # Sub-unit belonging to a different district must not appear under South.
+    dan_sub_unit = dashboard.option(filter_data["sub_units"]["dan"], "SubUnit")
+    expect(dan_sub_unit).not_to_be_visible()
 
 
 @pytest.mark.sanity

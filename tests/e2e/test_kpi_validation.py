@@ -1,5 +1,7 @@
 import pytest
 
+from reports.allure_catalog import FEATURE_KPI_ACCURACY, suite_marks
+from reports.test_run_report import get_current_report
 from tests.helpers.dashboard_validation import (
     DISTRICT_KEYS,
     KPI_TYPES,
@@ -8,6 +10,8 @@ from tests.helpers.dashboard_validation import (
     apply_filters,
     db_filter_kwargs,
 )
+
+pytestmark = suite_marks(feature=FEATURE_KPI_ACCURACY)
 
 
 @pytest.mark.data
@@ -34,5 +38,17 @@ def test_district_kpi_matches_db(dashboard, filter_data, db_client, district_key
 def test_filtered_kpis_match_db_get_dashboard_kpis(dashboard, filter_data, db_client, kpi_type):
     """Filtered get_dashboard_kpis() must match UI for all KPI types."""
     resolved = apply_filters(dashboard, filter_data, district="dan", category="truck")
-    db_kpis = db_client.get_dashboard_kpis(**db_filter_kwargs(resolved))
-    assert dashboard.get_kpi_value(kpi_type) == db_kpis[kpi_type]
+    db_filters = db_filter_kwargs(resolved)
+    db_kpis = db_client.get_dashboard_kpis(**db_filters)
+    ui_value = dashboard.get_kpi_value(kpi_type)
+    db_value = db_kpis[kpi_type]
+    report = get_current_report()
+    if report is not None:
+        report.log_assertion(
+            label=f"KPI '{kpi_type}'",
+            ui_value=ui_value,
+            db_value=db_value,
+            passed=ui_value == db_value,
+            filters=db_filters,
+        )
+    assert ui_value == db_value

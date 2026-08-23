@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Validation Core — מצגת למנהל עבודה</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-2: #34d399;
+      --warn: #fbbf24;
+      --danger: #f87171;
+      --line: #334155;
+      --table-head: #0ea5e9;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Heebo", "Arial", sans-serif;
+      overflow: hidden;
+    }
+
+    .deck {
+      height: 100%;
+      width: 100%;
+      position: relative;
+    }
+
+    .slide {
+      display: none;
+      height: 100%;
+      padding: 48px 72px 72px;
+      flex-direction: column;
+      justify-content: flex-start;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .slide.active { display: flex; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: 42px;
+      line-height: 1.2;
+      font-weight: 700;
+      margin-bottom: 18px;
+      max-width: 980px;
+    }
+
+    h2 {
+      font-size: 34px;
+      line-height: 1.25;
+      font-weight: 700;
+      margin-bottom: 22px;
+    }
+
+    h3 {
+      font-size: 20px;
+      color: var(--accent-2);
+      margin: 18px 0 10px;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      color: var(--muted);
+      max-width: 900px;
+      line-height: 1.5;
+      margin-bottom: 28px;
+    }
+
+    .one-liner {
+      font-size: 24px;
+      line-height: 1.45;
+      max-width: 920px;
+      border-right: 4px solid var(--accent);
+      padding-right: 18px;
+      margin: 16px 0 28px;
+    }
+
+    ul {
+      list-style: none;
+      max-width: 980px;
+    }
+
+    ul li {
+      position: relative;
+      padding: 10px 28px 10px 0;
+      font-size: 20px;
+      line-height: 1.45;
+      color: #e2e8f0;
+    }
+
+    ul li::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 18px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    ul.compact li { font-size: 17px; padding: 6px 24px 6px 0; }
+    ul.compact li::before { top: 13px; width: 8px; height: 8px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      max-width: 1100px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 16px;
+      max-width: 1100px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+
+    .card h3 {
+      margin-top: 0;
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .card p, .card li {
+      font-size: 16px;
+      color: #cbd5e1;
+      line-height: 1.45;
+    }
+
+    .card ul li { font-size: 16px; padding: 5px 22px 5px 0; }
+    .card ul li::before { top: 12px; width: 7px; height: 7px; }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+      max-width: 1100px;
+      margin: 10px 0 24px;
+    }
+
+    .stat {
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 18px 16px;
+      text-align: center;
+    }
+
+    .stat .num {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--accent);
+      line-height: 1.1;
+    }
+
+    .stat .label {
+      margin-top: 8px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      max-width: 1100px;
+      border-collapse: collapse;
+      font-size: 15px;
+      margin-top: 8px;
+    }
+
+    th, td {
+      border: 1px solid var(--line);
+      padding: 10px 12px;
+      text-align: right;
+      vertical-align: top;
+    }
+
+    th {
+      background: rgba(14, 165, 233, 0.15);
+      color: #7dd3fc;
+      font-weight: 600;
+    }
+
+    td { color: #e2e8f0; background: rgba(30, 41, 59, 0.55); }
+
+    .flow {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: 18px 0 24px;
+      max-width: 1100px;
+    }
+
+    .flow .box {
+      background: var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 16px;
+      min-width: 160px;
+      text-align: center;
+    }
+
+    .flow .arrow {
+      color: var(--accent);
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-left: 6px;
+    }
+
+    .tag.ok { background: rgba(52, 211, 153, 0.15); color: var(--accent-2); }
+    .tag.warn { background: rgba(251, 191, 36, 0.15); color: var(--warn); }
+    .tag.info { background: rgba(56, 189, 248, 0.15); color: var(--accent); }
+
+    .footer-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 52px;
+      background: rgba(15, 23, 42, 0.92);
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 28px;
+      font-size: 14px;
+      color: var(--muted);
+      z-index: 10;
+    }
+
+    .footer-bar .nav button {
+      background: var(--bg-card);
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 14px;
+      margin-right: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .footer-bar .nav button:hover { border-color: var(--accent); color: var(--accent); }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 3px;
+      background: var(--accent);
+      z-index: 20;
+      transition: width 0.2s ease;
+    }
+
+    .title-slide {
+      justify-content: center;
+      background:
+        radial-gradient(ellipse at 20% 20%, rgba(56, 189, 248, 0.12), transparent 45%),
+        radial-gradient(ellipse at 80% 70%, rgba(52, 211, 153, 0.10), transparent 40%),
+        var(--bg);
+    }
+
+    .title-slide h1 { font-size: 48px; }
+    .meta { margin-top: 36px; color: var(--muted); font-size: 16px; line-height: 1.7; }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 28px;
+      max-width: 1100px;
+      align-items: start;
+    }
+
+    .note {
+      margin-top: 18px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      color: #bae6fd;
+      font-size: 15px;
+      max-width: 980px;
+    }
+
+    .ask-list li { font-size: 19px; }
+
+    .small { font-size: 14px; color: var(--muted); margin-top: 12px; }
+
+    @media (max-width: 900px) {
+      .slide { padding: 28px 24px 70px; }
+      h1 { font-size: 28px; }
+      h2 { font-size: 24px; }
+      ul li { font-size: 16px; }
+      .stat-row, .grid-2, .grid-3, .two-col { grid-template-columns: 1fr; }
+      table { font-size: 13px; }
+    }
+
+    @media print {
+      body { overflow: visible; }
+      .footer-bar, .progress { display: none; }
+      .slide {
+        display: flex !important;
+        page-break-after: always;
+        height: auto;
+        min-height: 100vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <div class="deck" id="deck">
+
+    <!-- 1 -->
+    <section class="slide title-slide active">
+      <div class="eyebrow">Validation / QA · דשבורד שליטה בניוד</div>
+      <h1>Validation Core</h1>
+      <p class="subtitle">מסגרת אימות אוטומטית: מה שמוצג בדשבורד Power BI תואם את מחסן הנתונים ב-SQL Server</p>
+      <p class="one-liner">101 בדיקות אוטומטיות · KPI · פילטרים · טבלאות · גרפים · אינווריאנטים עסקיים</p>
+      <div class="meta">
+        מצגת למנהל עבודה<br />
+        מטרה: הצגת היקף העבודה, הערך העסקי, והשלבים הבאים להטמעה בצוות
+      </div>
+    </section>
+
+    <!-- 2 -->
+    <section class="slide">
+      <div class="eyebrow">סדר יום</div>
+      <h2>מה נעבור היום</h2>
+      <ul>
+        <li>הבעיה העסקית לפני האוטומציה</li>
+        <li>הפתרון שנבנה — במבט על</li>
+        <li>כיסוי הבדיקות: 101 תרחישים לפי תחומים</li>
+        <li>איך מריצים, ומה יוצא כראיה (דוחות)</li>
+        <li>תהליך עבודה משותף ל-BI / Data / Validation</li>
+        <li>מה כבר מוכן ומה חסר להטמעה מלאה</li>
+        <li>בקשות והחלטות נדרשות</li>
+      </ul>
+    </section>
+
+    <!-- 3 -->
+    <section class="slide">
+      <div class="eyebrow">הבעיה</div>
+      <h2>לפני — סיכון עסקי בשקט</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>מה עלול להישבר</h3>
+          <ul>
+            <li>שינוי ב-KPI / DAX / slicer ב-Power BI</li>
+            <li>שינוי עמודות או לוגיקה במחסן</li>
+            <li>פער בין מה שהמנהל רואה לבין הנתונים האמיתיים</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>איך בדקו עד היום</h3>
+          <ul>
+            <li>בדיקות ידניות — איטיות ולא חוזרות</li>
+            <li>קשה להוכיח כיסוי מלא</li>
+            <li>אין מקור אמת משותף בין BI, Data ו-Validation</li>
+            <li>רגרסיה אחרי שינוי תלויה בזיכרון אנושי</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note">הדשבורד הוא כלי החלטה. אם המספרים שגויים — ההחלטות שגויות.</div>
+    </section>
+
+    <!-- 4 -->
+    <section class="slide">
+      <div class="eyebrow">הפתרון</div>
+      <h2>מה נבנה</h2>
+      <p class="subtitle">מסגרת pytest + Playwright שמשווה את הדשבורד בפורטל מול שאילתות SQL (קריאה בלבד).</p>
+      <div class="flow">
+        <div class="box">דפדפן<br /><span class="small">Playwright + Chromium</span></div>
+        <div class="arrow">←→</div>
+        <div class="box">דשבורד Power BI<br /><span class="small">KPI / פילטרים / גרפים</span></div>
+        <div class="arrow">←→</div>
+        <div class="box">SQL Server<br /><span class="small">DIM + FACT</span></div>
+        <div class="arrow">→</div>
+        <div class="box">דוח<br /><span class="small">HTML · CSV · Allure</span></div>
+      </div>
+      <ul class="compact">
+        <li>מקור האמת לכיסוי: קטלוג `COVERAGE_CATALOG` — קישור כלל עסקי ↔ UI ↔ DB ↔ טסט</li>
+        <li>מיועד לצוותי Validation / QA, BI ו-Data</li>
+      </ul>
+    </section>
+
+    <!-- 5 -->
+    <section class="slide">
+      <div class="eyebrow">במספרים</div>
+      <h2>היקף העבודה — במבט אחד</h2>
+      <div class="stat-row">
+        <div class="stat"><div class="num">101</div><div class="label">בדיקות אוטומטיות</div></div>
+        <div class="stat"><div class="num">4</div><div class="label">KPI מרכזיים מול DB</div></div>
+        <div class="stat"><div class="num">4</div><div class="label">גרפים מאומתים</div></div>
+        <div class="stat"><div class="num">3</div><div class="label">סוגי הרצה (sanity / data / regression)</div></div>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <h3>UI Smoke</h3>
+          <p>טעינה, נראות, UX פילטרים — מהיר לפני שינוי</p>
+        </div>
+        <div class="card">
+          <h3>UI ↔ DB</h3>
+          <p>השוואת מספרים ותוויות מול מחסן הנתונים</p>
+        </div>
+        <div class="card">
+          <h3>כללים עסקיים</h3>
+          <p>אינווריאנטים, מקרי קצה, עקביות פילוחים</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6 -->
+    <section class="slide">
+      <div class="eyebrow">מקור האמת</div>
+      <h2>ארבעת ה-KPI</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>KPI ב-UI</th>
+            <th>מקור DB</th>
+            <th>כלל עיקרי</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>סה״כ רכבים שנקלטו</td>
+            <td>[DIM].[Vehicle]</td>
+            <td>Environment = מבצעי</td>
+          </tr>
+          <tr>
+            <td>סה״כ רכבים בשימוש</td>
+            <td>[DIM].[Vehicle]</td>
+            <td>IsActive = 1 + Environment</td>
+          </tr>
+          <tr>
+            <td>רכבים שזוכו</td>
+            <td>[FACT].[SigningReturnVehicle]</td>
+            <td>סינון דרך DIM (VehicleID) + Environment</td>
+          </tr>
+          <tr>
+            <td>רכבים שווסתו</td>
+            <td>[FACT].[VehicleFlow]</td>
+            <td>סינון דרך DIM (VehicleID) + Environment</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">פילטרים משותפים: Unit / SubUnit / VehicleCategory / VehicleSource — כמו ב-Power BI (דרך DIM).</div>
+    </section>
+
+    <!-- 7 -->
+    <section class="slide">
+      <div class="eyebrow">כיסוי בדיקות · חלק א׳</div>
+      <h2>Smoke, פילטרים ו-KPI</h2>
+      <table>
+        <thead>
+          <tr><th>קטגוריה</th><th>כמות</th><th>מה נבדק</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>ביצועים</td>
+            <td>1</td>
+            <td>טעינת דשבורד תקינה עד 5 שניות (SLA)</td>
+          </tr>
+          <tr>
+            <td>טעינה ונראות</td>
+            <td>4</td>
+            <td>KPI, iframe, סינונים, גרפים וטבלה גלויים; ערכי KPI לא שליליים</td>
+          </tr>
+          <tr>
+            <td>סינונים — UX</td>
+            <td>5</td>
+            <td>צמצום מונים, סינון משולב, cascading SubUnit, ניקוי, ניווט טאבים</td>
+          </tr>
+          <tr>
+            <td>דיוק KPI מול מחסן</td>
+            <td>17</td>
+            <td>baseline + 3 מחוזות × 4 KPI + סינון משולב יחידה+קטגוריה</td>
+          </tr>
+          <tr>
+            <td>מטריצת סינונים</td>
+            <td>15</td>
+            <td>סינון בודד / משולב / תרחישים ייעודיים — כל ה-KPI מול DB</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 8 -->
+    <section class="slide">
+      <div class="eyebrow">כיסוי בדיקות · חלק ב׳</div>
+      <h2>טבלה, גרפים וטולטיפים</h2>
+      <table>
+        <thead>
+          <tr><th>קטגוריה</th><th>כמות</th><th>מה נבדק</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>טאבים וטבלת רכבים</td>
+            <td>11</td>
+            <td>KPI לפי טאב מול DB; שורות↔KPI; חיפוש; לחיצה על שורה → cross-filter</td>
+          </tr>
+          <tr>
+            <td>גרפים — נראות ותוויות</td>
+            <td>13</td>
+            <td>4 גרפים גלויים; תוויות מקור/יחידות מול DB; distinct; אחרי סינון</td>
+          </tr>
+          <tr>
+            <td>טולטיפ גרפים</td>
+            <td>14</td>
+            <td>הופעה/סגירה ב-hover; ערך טולטיפ מול DB (מקור, יחידות, סיבות זיכוי)</td>
+          </tr>
+          <tr>
+            <td>הסתעפות גרפים</td>
+            <td>7</td>
+            <td>Unit → SubUnit; סכום ילדים = אב; כיבוד פילטרים; כינוס חזרה</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 9 -->
+    <section class="slide">
+      <div class="eyebrow">כיסוי בדיקות · חלק ג׳</div>
+      <h2>שלמות נתונים ומקרי קצה</h2>
+      <div class="two-col">
+        <div>
+          <h3>אינווריאנטים עסקיים — 8</h3>
+          <ul class="compact">
+            <li>בשימוש ≤ סה״כ (UI + DB)</li>
+            <li>זוכו נספר מ-FACT SigningReturnVehicle</li>
+            <li>שווסתו נספר מ-FACT VehicleFlow</li>
+            <li>סכום פילוח מקור = KPI בשימוש</li>
+            <li>סכום פילוח יחידה = KPI בשימוש</li>
+            <li>סכום פילוח קטגוריה = KPI סה״כ</li>
+            <li>סכום סיבות זיכוי = KPI שזוכו</li>
+          </ul>
+        </div>
+        <div>
+          <h3>מקרי קצה — 6</h3>
+          <ul class="compact">
+            <li>סינון עם אפס תוצאות → KPI = 0</li>
+            <li>ניקוי סינונים מחזיר ל-baseline מול DB</li>
+            <li>רענון דף משחזר ערכי בסיס</li>
+            <li>סינון קיצוני מצמצם את כל ארבעת ה-KPI</li>
+            <li>אימות FACT ל-KPI זוכו / שווסתו</li>
+          </ul>
+        </div>
+      </div>
+      <div class="note">סה״כ: 101 בדיקות מתועדות ב-`docs/TEST_SUITE_SUMMARY.md`.</div>
+    </section>
+
+    <!-- 10 -->
+    <section class="slide">
+      <div class="eyebrow">פירוט מוצר</div>
+      <h2>מה מכוסה בדשבורד</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>פילטרים (Slicers)</h3>
+          <ul>
+            <li>יחידה (Unit) — מחוז דן / דרום / צפון</li>
+            <li>תת־יחידה (SubUnit) — cascading</li>
+            <li>קטגוריית רכב</li>
+            <li>מקור רכב (יר״ם, מרכז הובלה…)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>טאבים וגרפים</h3>
+          <ul>
+            <li>טאבים: כל הרכבים / בשימוש / שווסתו / שזוכו</li>
+            <li>גרף מקור משיכה</li>
+            <li>גרף יחידות (+ הסתעפות לתת־יחידה)</li>
+            <li>גרף קטגוריות · גרף סיבות זיכוי</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11 -->
+    <section class="slide">
+      <div class="eyebrow">תפעול</div>
+      <h2>איך מריצים ביום־יום</h2>
+      <table>
+        <thead>
+          <tr><th>מטרה</th><th>פקודה</th><th>מתי</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="tag info">Smoke</span> בדיקה מהירה</td>
+            <td><code>pytest -m sanity</code></td>
+            <td>לפני שינוי / אחרי deploy קטן</td>
+          </tr>
+          <tr>
+            <td><span class="tag ok">Data</span> רק UI↔DB</td>
+            <td><code>pytest -m data</code></td>
+            <td>כשמשנים לוגיקת מידה / מחסן</td>
+          </tr>
+          <tr>
+            <td><span class="tag warn">Regression</span> רגרסיה מלאה</td>
+            <td><code>pytest -m regression</code></td>
+            <td>לפני מסירה / שינוי גדול ב-BI</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">התחברות: הרצה ראשונה עם login ידני → נשמר סשן (`auth_state.json`) להרצות הבאות.</div>
+    </section>
+
+    <!-- 12 -->
+    <section class="slide">
+      <div class="eyebrow">ראיות</div>
+      <h2>מה יוצא אחרי כל הרצה</h2>
+      <table>
+        <thead>
+          <tr><th>פלט</th><th>למי</th><th>שימוש</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>HTML — <code>test-results/report.html</code></td>
+            <td>QA / פיתוח</td>
+            <td>סיכום עבר/נכשל בדפדפן</td>
+          </tr>
+          <tr>
+            <td>CSV בעברית — <code>run-reports/run_*.csv</code></td>
+            <td>BI / מנהלים</td>
+            <td>שלבים: פעולה UI, שאילתת SQL, סטטוס</td>
+          </tr>
+          <tr>
+            <td>Allure</td>
+            <td>Validation</td>
+            <td>Behaviors לפי Epic/Feature + צעדים + צילומי מסך</td>
+          </tr>
+          <tr>
+            <td>Screenshots + Playwright Trace</td>
+            <td>דיבוג</td>
+            <td>שחזור כשל בלחיצה</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="note">ה-CSV הוא הארטיפקט העסקי העיקרי — ראיה שניתן לצרף לתיעוד ריצה / מסירה.</div>
+    </section>
+
+    <!-- 13 -->
+    <section class="slide">
+      <div class="eyebrow">תהליך צוות</div>
+      <h2>לפני שינוי בדשבורד</h2>
+      <ul>
+        <li>פותחים את קטלוג הכיסוי ומזהים את ה-KPI / פילטר / גרף שמשתנה</li>
+        <li>מעדכנים Page Object / שאילתות DB לפי הצ׳קליסט</li>
+        <li>מריצים <code>sanity</code> ואז <code>regression</code></li>
+        <li>שומרים את ה-CSV מהריצה כראיה לאימות</li>
+      </ul>
+      <h3>בעלות מוצעת (RACI)</h3>
+      <table>
+        <thead>
+          <tr><th>שינוי</th><th>BI</th><th>Data</th><th>Validation</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>כותרת ויזואל / slicer</td>
+            <td>R</td>
+            <td>C</td>
+            <td>A — עדכון selectors</td>
+          </tr>
+          <tr>
+            <td>לוגיקת מידה / עמודת סטטוס</td>
+            <td>C</td>
+            <td>R</td>
+            <td>A — עדכון SQL + טסט</td>
+          </tr>
+          <tr>
+            <td>טסט חדש / הרחבת מטריצה</td>
+            <td>C</td>
+            <td>C</td>
+            <td>R</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="small">R = Responsible · A = Accountable · C = Consulted</p>
+    </section>
+
+    <!-- 14 -->
+    <section class="slide">
+      <div class="eyebrow">ארכיטקטורה בקצרה</div>
+      <h2>מבנה הפרויקט (ללא עומק טכני)</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3>שכבות</h3>
+          <ul>
+            <li><strong>pages/</strong> — Page Object של הדשבורד</li>
+            <li><strong>db/</strong> — לקוח SQL לקריאה בלבד</li>
+            <li><strong>tests/ui</strong> — smoke / sanity</li>
+            <li><strong>tests/e2e</strong> — רגרסיה UI↔DB</li>
+            <li><strong>reports/</strong> — CSV + Allure catalog</li>
+            <li><strong>docs/</strong> — קטלוג כיסוי + סיכום בדיקות</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>נתוני תרחישים</h3>
+          <ul>
+            <li><code>filters.json</code> — ערכי פילטר לדוגמה</li>
+            <li><code>filter_matrix.json</code> — מטריצת קומבינציות</li>
+            <li>קטלוג הכיסוי מתעדכן בכל שינוי מידה / slicer</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 15 -->
+    <section class="slide">
+      <div class="eyebrow">שקיפות</div>
+      <h2>מה כבר מוכן · מה עדיין חסר</h2>
+      <div class="grid-2">
+        <div class="card">
+          <h3><span class="tag ok">מוכן</span></h3>
+          <ul>
+            <li>101 בדיקות מתועדות וממופות לקטלוג</li>
+            <li>השוואת UI↔DB על KPI, פילטרים, טבלה, גרפים</li>
+            <li>טולטיפים + הסתעפות Unit→SubUnit</li>
+            <li>אינווריאנטים ומקרי קצה</li>
+            <li>דוחות HTML / CSV / Allure מקומית</li>
+            <li>תהליך עבודה מוצע לצוות (RACI + צ׳קליסט)</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3><span class="tag warn">חסר להטמעה מלאה</span></h3>
+          <ul>
+            <li>Pipeline CI (GitHub Actions / Azure DevOps)</li>
+            <li>אסטרטגיית auth לא-אינטראקטיבית מוסכמת (service account)</li>
+            <li>יעד פרסום קבוע לדוחות (SharePoint / blob / pages)</li>
+            <li>הרצה מתוזמנת (למשל שבועית) כחלק מתהליך המסירה</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 16 -->
+    <section class="slide">
+      <div class="eyebrow">ערך עסקי</div>
+      <h2>מה הרווחנו</h2>
+      <ul>
+        <li><strong>אמון בנתונים</strong> — המספרים בדשבורד ניתנים לאימות מול המחסן בכל הרצה</li>
+        <li><strong>רגרסיה חוזרת</strong> — אחרי שינוי BI/Data אפשר להריץ suite מלא במקום סבב ידני חלקי</li>
+        <li><strong>שפה משותפת</strong> — קטלוג כיסוי אחד ל-BI, Data ו-Validation</li>
+        <li><strong>ראיה לתיעוד</strong> — CSV בעברית לכל ריצה (מה נבדק, מה עבר/נכשל)</li>
+        <li><strong>גילוי מוקדם</strong> — פערים בטולטיפ, הסתעפות, או אינווריאנט נתפסים לפני מסירה</li>
+      </ul>
+    </section>
+
+    <!-- 17 -->
+    <section class="slide">
+      <div class="eyebrow">המלצה</div>
+      <h2>שלבים הבאים (מוצע)</h2>
+      <div class="grid-3">
+        <div class="card">
+          <h3>1 · יציבות מקומית</h3>
+          <p>המשך הרצות sanity/regression לפני כל שינוי בדשבורד; שמירת CSV כראיה.</p>
+        </div>
+        <div class="card">
+          <h3>2 · Auth צוותי</h3>
+          <p>הסכמה על service account או תהליך חידוש מבוקר של סשן הפורטל.</p>
+        </div>
+        <div class="card">
+          <h3>3 · CI + פרסום</h3>
+          <p>Pipeline שמריץ, מייצר Allure/CSV, ומפרסם דוח למקום קבוע.</p>
+        </div>
+      </div>
+      <div class="note">בלי שלבים 2–3 הכלי עובד מקומית; עם CI הוא הופך לחלק מתהליך המסירה הארגוני.</div>
+    </section>
+
+    <!-- 18 -->
+    <section class="slide">
+      <div class="eyebrow">החלטות</div>
+      <h2>בקשות מהמנהל</h2>
+      <ul class="ask-list">
+        <li>אישור שהמסגרת היא חלק מתהליך המסירה של שינויי דשבורד</li>
+        <li>הקצאת בעלות: מי מעדכן קטלוג/טסטים אחרי שינוי BI או Data</li>
+        <li>אישור קידום ל-CI + פתרון auth לא-אינטראקטיבי</li>
+        <li>הגדרת יעד לפרסום דוחות (למי נשלח / איפה נשמר)</li>
+      </ul>
+    </section>
+
+    <!-- 19 -->
+    <section class="slide">
+      <div class="eyebrow">נספח</div>
+      <h2>סיכום כמויות לפי קטגוריה</h2>
+      <table>
+        <thead>
+          <tr><th>קטגוריה</th><th>כמות</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>ביצועים (Performance)</td><td>1</td></tr>
+          <tr><td>טעינה ונראות (Smoke)</td><td>4</td></tr>
+          <tr><td>סינונים — UX</td><td>5</td></tr>
+          <tr><td>דיוק KPI מול מחסן</td><td>17</td></tr>
+          <tr><td>מטריצת סינונים</td><td>15</td></tr>
+          <tr><td>טאבים וטבלת רכבים</td><td>11</td></tr>
+          <tr><td>גרפים — נראות ותוויות</td><td>13</td></tr>
+          <tr><td>טולטיפ גרפים</td><td>14</td></tr>
+          <tr><td>הסתעפות גרפים</td><td>7</td></tr>
+          <tr><td>שלמות נתונים</td><td>8</td></tr>
+          <tr><td>מקרי קצה</td><td>6</td></tr>
+          <tr><td><strong>סה״כ</strong></td><td><strong>101</strong></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- 20 -->
+    <section class="slide title-slide">
+      <div class="eyebrow">סיכום</div>
+      <h1>Validation Core מוכן לשימוש מקומי</h1>
+      <p class="one-liner">
+        101 בדיקות אוטומטיות מאמתות את דשבורד השליטה בניוד מול מחסן הנתונים —
+        עם קטלוג כיסוי, דוחות עסקיים, ותהליך עבודה לצוות.
+      </p>
+      <ul>
+        <li>השלב הבא הקריטי: CI + auth צוותי + פרסום דוחות</li>
+        <li>מסמכים: <code>docs/COVERAGE_CATALOG.md</code> · <code>docs/TEST_SUITE_SUMMARY.md</code> · <code>README.md</code></li>
+        <li>דמו מומלץ: פתיחת <code>test-results/report.html</code> או CSV אחרון מ-<code>run-reports/</code></li>
+      </ul>
+      <div class="meta">תודה · שאלות?</div>
+    </section>
+
+  </div>
+
+  <div class="footer-bar">
+    <div>Validation Core · דשבורד שליטה בניוד</div>
+    <div class="nav">
+      <button type="button" id="prevBtn">הקודם</button>
+      <button type="button" id="nextBtn">הבא</button>
+      <span id="counter">1 / 20</span>
+    </div>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll(".slide"));
+    let index = 0;
+
+    function show(i) {
+      index = Math.max(0, Math.min(slides.length - 1, i));
+      slides.forEach((s, n) => s.classList.toggle("active", n === index));
+      document.getElementById("counter").textContent = (index + 1) + " / " + slides.length;
+      document.getElementById("progress").style.width = ((index + 1) / slides.length * 100) + "%";
+    }
+
+    document.getElementById("prevBtn").addEventListener("click", () => show(index - 1));
+    document.getElementById("nextBtn").addEventListener("click", () => show(index + 1));
+
+    document.addEventListener("keydown", (e) => {
+      if (["ArrowLeft", "ArrowDown", "PageDown", " ", "Enter"].includes(e.key)) {
+        e.preventDefault();
+        show(index + 1);
+      } else if (["ArrowRight", "ArrowUp", "PageUp", "Backspace"].includes(e.key)) {
+        e.preventDefault();
+        show(index - 1);
+      } else if (e.key === "Home") {
+        show(0);
+      } else if (e.key === "End") {
+        show(slides.length - 1);
+      }
+    });
+
+    show(0);
+  </script>
+</body>
+</html>

@@ -1,7 +1,23 @@
 import pytest
 from playwright.sync_api import expect
 
+from config.settings import settings
+from reports.allure_catalog import FEATURE_UI_SMOKE, suite_marks
 from tests.helpers.dashboard_validation import KPI_TYPES
+
+pytestmark = suite_marks(feature=FEATURE_UI_SMOKE)
+
+
+@pytest.mark.sanity
+def test_dashboard_loads_within_sla(dashboard):
+    """Authenticated reload must show the total KPI within the load SLA (default 5s)."""
+    elapsed_ms = dashboard.reload_and_measure_ready_ms()
+    assert elapsed_ms <= settings.DASHBOARD_LOAD_SLA_MS, (
+        f"Dashboard load took {elapsed_ms}ms; "
+        f"SLA is {settings.DASHBOARD_LOAD_SLA_MS}ms "
+        f"(set DASHBOARD_LOAD_SLA_MS to override)"
+    )
+    assert dashboard.get_kpi_value("total") >= 0
 
 
 @pytest.mark.sanity
