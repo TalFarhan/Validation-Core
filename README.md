@@ -110,8 +110,9 @@ allure serve test-results/allure-results
 
 ```
 config/settings.py          # הגדרות מ-.env
+core/portal/                # Layer 0 — ReportShell (SSO, קטלוג, iframe, timeouts)
 db/                         # לקוח SQL לקריאה בלבד
-pages/fleet_dashboard/      # Page Object של הדשבורד
+pages/fleet_dashboard/      # Page Object של דשבורד הצי (ירושה/הרכבה של ReportShell)
 tests/ui/                   # sanity / smoke
 tests/e2e/                  # רגרסיה UI↔DB
 tests/helpers/              # assert משותפים
@@ -120,7 +121,20 @@ data/filter_matrix.json     # תרחישי מטריצה
 reports/test_run_report.py  # כתיבת CSV לריצה
 reports/allure_catalog.py   # Epic / Feature labels ל-Allure
 docs/COVERAGE_CATALOG.md    # קטלוג KPI ↔ DB ↔ טסטים
+.specify/memory/constitution.md  # עקרונות שכבות, אי-דליפת דומיין, חוזה הטסטים
 ```
+
+### שכבות (Layered Portal)
+
+| שכבה | מיקום | מה מותר |
+|------|--------|---------|
+| Layer 0 | `core/portal/` (`ReportShell`) | התחברות/SSO, חיפוש קטלוג, המתנה ל-iframe, timeout לטעינת ויזואל |
+| Domain | `pages/<report>/` | KPI, פילטרים, טאבים, טבלאות, גרפים — לדוגמה צי (`vehicles`, `district`) |
+| Warehouse | `db/` | שאילתות קריאה בלבד; לא חלק מ-Layer 0 |
+
+`ReportShell` חייב להישאר גנרי: אסור שידלוף אליו לוגיקה של דשבורד ספציפי.
+אחרי שינוי ב-Layer 0, `pytest` על `tests/ui/fleet_dashboard/` חייב לעבור ב-100%.
+עקרונות מלאים: [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 
 ---
 
