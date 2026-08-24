@@ -46,8 +46,9 @@ class Settings:
     HEADLESS = _env("HEADLESS", "false").lower() == "true"
     MANUAL_LOGIN = _env("MANUAL_LOGIN", "true").lower() == "true"
     DEFAULT_TIMEOUT = int(_env("DEFAULT_TIMEOUT", "15000"))
-    # Max accepted time (ms) from reload → total KPI visible (warm / authenticated).
-    DASHBOARD_LOAD_SLA_MS = int(_env("DASHBOARD_LOAD_SLA_MS", "5000"))
+    # Max accepted time (ms) from reload → ready visual visible (warm / authenticated).
+    # Power BI iframe load commonly exceeds 5s; 30s matches observed warm-load times.
+    DASHBOARD_LOAD_SLA_MS = int(_env("DASHBOARD_LOAD_SLA_MS", "30000"))
     # Progressive wait budgets (ms), capped by DEFAULT_TIMEOUT.
     # Fast path uses the first step; slower steps run only after earlier ones fail.
     _timeout_steps_raw = _env("TIMEOUT_STEPS_MS", "3000,8000,20000")

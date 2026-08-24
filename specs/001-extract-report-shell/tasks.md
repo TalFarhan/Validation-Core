@@ -33,9 +33,9 @@ description: "Task list for Extract Generic ReportShell (Layer 0)"
 
 **Purpose**: Baseline the live suite and add the Layer 0 package without moving behavior
 
-- [ ] T001 Record baseline by running `pytest tests/ui/fleet_dashboard/` and note the result (no code changes)
-- [ ] T002 [P] Create package `core/portal/__init__.py` (empty or re-export placeholder only)
-- [ ] T003 Confirm fixture callers in `conftest.py` (`navigate`, `_dashboard_ready`, `_recover_from_portal_glitch`, `_is_portal_profile_error`) and do not edit that file
+- [x] T001 Record baseline by running `pytest tests/ui/fleet_dashboard/` and note the result (no code changes)
+- [x] T002 [P] Create package `core/portal/__init__.py` (empty or re-export placeholder only)
+- [x] T003 Confirm fixture callers in `conftest.py` (`navigate`, `_dashboard_ready`, `_recover_from_portal_glitch`, `_is_portal_profile_error`) and do not edit that file
 
 ---
 
@@ -45,10 +45,10 @@ description: "Task list for Extract Generic ReportShell (Layer 0)"
 
 **⚠️ CRITICAL**: No user story method-moves until this phase is complete
 
-- [ ] T004 Create `ReportShell(BasePage)` in `core/portal/page.py` with `_report_ready_locator(self)` raising `NotImplementedError` and `after_navigate(self)` as a no-op
-- [ ] T005 Change `MainDashboardPage` to inherit `ReportShell` instead of `BasePage` in `pages/fleet_dashboard/main_dashboard_page.py`
-- [ ] T006 Override `_report_ready_locator` on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` to return `self.total_vehicles_kpi` (locator only; do not move methods)
-- [ ] T007 Run `pytest tests/ui/fleet_dashboard/` — MUST pass (behavior still entirely on the subclass)
+- [x] T004 Create `ReportShell(BasePage)` in `core/portal/page.py` with `_report_ready_locator(self)` raising `NotImplementedError` and `after_navigate(self)` as a no-op
+- [x] T005 Change `MainDashboardPage` to inherit `ReportShell` instead of `BasePage` in `pages/fleet_dashboard/main_dashboard_page.py`
+- [x] T006 Override `_report_ready_locator` on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` to return `self.total_vehicles_kpi` (locator only; do not move methods)
+- [x] T007 Run `pytest tests/ui/fleet_dashboard/` — MUST pass (behavior still entirely on the subclass)
 
 **Checkpoint**: `MainDashboardPage` is a `ReportShell`. Import `from core.portal.page import ReportShell` works. Foundation ready.
 
@@ -64,18 +64,18 @@ description: "Task list for Extract Generic ReportShell (Layer 0)"
 
 Existing smoke is the test. Do not write new test modules.
 
-- [ ] T008 [US1] Rewire `_dashboard_ready` in `pages/fleet_dashboard/main_dashboard_page.py` to use iframe wait plus `self._report_ready_locator()` (stop naming `self.total_vehicles_kpi` inside `_dashboard_ready`)
-- [ ] T009 [US1] Implement `after_navigate` on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` as `self.reset_dashboard_filters()` and switch both `navigate` call sites that reset filters to `self.after_navigate()`
-- [ ] T010 [US1] Rewire the ready-wait loop in `navigate` and in `reload_and_measure_ready_ms` in `pages/fleet_dashboard/main_dashboard_page.py` to poll `_report_ready_locator()` instead of `self.total_vehicles_kpi`
-- [ ] T011 [US1] Run `pytest tests/ui/fleet_dashboard/` after in-place hooks (Strangler step 2 GATE)
+- [x] T008 [US1] Rewire `_dashboard_ready` in `pages/fleet_dashboard/main_dashboard_page.py` to use iframe wait plus `self._report_ready_locator()` (stop naming `self.total_vehicles_kpi` inside `_dashboard_ready`)
+- [x] T009 [US1] Implement `after_navigate` on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` as `self.reset_dashboard_filters()` and switch both `navigate` call sites that reset filters to `self.after_navigate()`
+- [x] T010 [US1] Rewire the ready-wait loop in `navigate` and in `reload_and_measure_ready_ms` in `pages/fleet_dashboard/main_dashboard_page.py` to poll `_report_ready_locator()` instead of `self.total_vehicles_kpi`
+- [x] T011 [US1] Run `pytest tests/ui/fleet_dashboard/` after in-place hooks (Strangler step 2 GATE)
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Move leaf helpers `_portal_search_box`, `_all_products_control`, `_dashboard_iframe`, `_click_even_if_hidden`, `_is_portal_home`, `_hitachbrut_button`, `_is_login_page`, `_page_debug_summary`, `_is_portal_profile_error` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py`; delete the fleet copies; run `pytest tests/ui/fleet_dashboard/`
-- [ ] T013 [US1] Move `_recover_from_portal_glitch` and `_wait_for_dashboard_iframe` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py` (auth may still resolve on the subclass); run `pytest tests/ui/fleet_dashboard/`
-- [ ] T014 [US1] Move `_open_all_products_catalog` and `_open_dashboard_via_portal_search` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py`; comments must use `settings.DASHBOARD_SEARCH_TERM` only (no fleet product name); run `pytest tests/ui/fleet_dashboard/`
-- [ ] T015 [US1] Move `_auto_click_hitachbrut` and `_ensure_authenticated` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py`; they MUST call hook-based `_dashboard_ready` / `_report_ready_locator`, never `total_vehicles_kpi`; run `pytest tests/ui/fleet_dashboard/`
-- [ ] T016 [US1] Move `navigate` and `reload_and_measure_ready_ms` to `core/portal/page.py` with frozen signatures `navigate(self, *, force_reload: bool = False) -> None` and `reload_and_measure_ready_ms(self) -> int`; `navigate` MUST call `after_navigate()` on reuse and after cold load; keep `_dashboard_ready` name for `conftest.py`; run `pytest tests/ui/fleet_dashboard/`
+- [x] T012 [US1] Move leaf helpers `_portal_search_box`, `_all_products_control`, `_dashboard_iframe`, `_click_even_if_hidden`, `_is_portal_home`, `_hitachbrut_button`, `_is_login_page`, `_page_debug_summary`, `_is_portal_profile_error` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py`; delete the fleet copies; run `pytest tests/ui/fleet_dashboard/`
+- [x] T013 [US1] Move `_recover_from_portal_glitch` and `_wait_for_dashboard_iframe` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py` (auth may still resolve on the subclass); run `pytest tests/ui/fleet_dashboard/`
+- [x] T014 [US1] Move `_open_all_products_catalog` and `_open_dashboard_via_portal_search` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py`; comments must use `settings.DASHBOARD_SEARCH_TERM` only (no fleet product name); run `pytest tests/ui/fleet_dashboard/`
+- [x] T015 [US1] Move `_auto_click_hitachbrut` and `_ensure_authenticated` from `pages/fleet_dashboard/main_dashboard_page.py` to `core/portal/page.py`; they MUST call hook-based `_dashboard_ready` / `_report_ready_locator`, never `total_vehicles_kpi`; run `pytest tests/ui/fleet_dashboard/`
+- [x] T016 [US1] Move `navigate` and `reload_and_measure_ready_ms` to `core/portal/page.py` with frozen signatures `navigate(self, *, force_reload: bool = False) -> None` and `reload_and_measure_ready_ms(self) -> int`; `navigate` MUST call `after_navigate()` on reuse and after cold load; keep `_dashboard_ready` name for `conftest.py`; run `pytest tests/ui/fleet_dashboard/`
 
 **Checkpoint**: MVP — open/reuse/auth/catalog/ready path works from the shell. Smoke 100% green. Do not proceed if T016 smoke fails.
 
