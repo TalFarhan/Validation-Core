@@ -117,11 +117,12 @@ and the settle hook.
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Move fleet slicer accessible names into a page-owned `SlicerDefinition` list on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` (Unit, SubUnit, VehicleSource, VehicleCategory); `Slicer` in `core/components/slicer.py` reads only `definitions` and MUST NOT hardcode those role names
-- [ ] T016 [US2] Implement `MainDashboardPage` settle hook in `pages/fleet_dashboard/main_dashboard_page.py` (dismiss via ready/KPI locator + optional `wait_for_kpi_update` on total/in_use, matching today's post-select wait); confirm `core/components/slicer.py` only calls the hook
-- [ ] T017 [US2] Implement `Slicer.select_many` for `kind=checkbox` in `core/components/slicer.py` (open, tick values, dismiss, settle). No fleet wrapper rewrite. Do not change fleet dropdowns to checkboxes
-- [ ] T018 [US2] Search `core/` (including `core/components/slicer.py` and `core/portal/page.py`) for leakage tokens `vehicles`, `district`, `subunit`, `sub_unit`, `total_vehicles`, `select_district`, `רכבים`, `מחוז`, `reset_dashboard_filters` and remove any hits
+- [x] T015 [US2] Move fleet slicer accessible names into a page-owned `SlicerDefinition` list on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` (Unit, SubUnit, VehicleSource, VehicleCategory); `Slicer` in `core/components/slicer.py` reads only `definitions` and MUST NOT hardcode those role names
+- [x] T016 [US2] Implement `MainDashboardPage` settle hook in `pages/fleet_dashboard/main_dashboard_page.py` (dismiss via ready/KPI locator + optional `wait_for_kpi_update` on total/in_use, matching today's post-select wait); confirm `core/components/slicer.py` only calls the hook
+- [x] T017 [US2] Implement `Slicer.select_many` for `kind=checkbox` in `core/components/slicer.py` (open, tick values, dismiss, settle). No fleet wrapper rewrite. Do not change fleet dropdowns to checkboxes
+- [x] T018 [US2] Search `core/` (including `core/components/slicer.py` and `core/portal/page.py`) for leakage tokens `vehicles`, `district`, `subunit`, `sub_unit`, `total_vehicles`, `select_district`, `רכבים`, `מחוז`, `reset_dashboard_filters` and remove any hits
 - [ ] T019 [US2] Run `pytest tests/ui/fleet_dashboard/` — MUST pass after hook-only settle and leakage cleanup
+  — **STOP**: user runs this gate before Phase 5.
 
 **Checkpoint**: A second report could supply definitions + settle without
 inheriting fleet district methods.

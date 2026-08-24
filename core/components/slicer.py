@@ -88,16 +88,26 @@ class Slicer:
 
     def control(self, slicer_id: str) -> Locator:
         definition = self._definition(slicer_id)
+        name = definition.role_name
         if definition.kind == "search":
             self._not_wired("control(search)")
-        return self._frame.get_by_role(
-            "combobox", name=definition.role_name, exact=True
-        )
+        if definition.kind == "checkbox":
+            # Open list (combobox) or always-visible checklist (listbox).
+            return self._frame.get_by_role("combobox", name=name, exact=True).or_(
+                self._frame.get_by_role("listbox", name=name, exact=True)
+            )
+        return self._frame.get_by_role("combobox", name=name, exact=True)
 
     def option_by_role(self, option_name: str, role_name: str) -> Locator:
         return self._frame.get_by_role(
             "listbox", name=role_name, exact=True
         ).get_by_role("option", name=option_name, exact=True)
+
+    def _choice(self, option_name: str, role_name: str) -> Locator:
+        listbox = self._frame.get_by_role("listbox", name=role_name, exact=True)
+        return listbox.get_by_role("option", name=option_name, exact=True).or_(
+            listbox.get_by_role("checkbox", name=option_name, exact=True)
+        )
 
     def close_open(self) -> None:
         self._page.keyboard.press("Escape")
@@ -140,7 +150,30 @@ class Slicer:
             report.log_filter(definition.role_name, value)
 
     def select_many(self, slicer_id: str, values: Sequence[str]) -> None:
-        self._not_wired("select_many")
+        definition = self._definition(slicer_id)
+        if definition.kind != "checkbox":
+            raise ValueError(
+                f"Slicer.select_many expects kind='checkbox', got "
+                f"{definition.kind!r} for id {slicer_id!r}"
+            )
+        if not values:
+            return
+
+        self.close_open()
+        self._call_settle("before_select")
+        self.control(slicer_id).click(force=True)
+        for value in values:
+            choice = self._choice(value, definition.role_name)
+            expect(choice).to_be_visible(timeout=self._timeout)
+            choice.scroll_into_view_if_needed()
+            choice.click(force=True)
+        self.close_open()
+        self._call_settle("after_select")
+
+        report = get_current_report()
+        if report is not None:
+            for value in values:
+                report.log_filter(definition.role_name, value)
 
     def search(self, slicer_id: str, query: str) -> None:
         self._not_wired("search")
