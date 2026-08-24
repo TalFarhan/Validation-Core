@@ -1,27 +1,17 @@
 <!--
 Sync Impact Report
-- Version change: (unratified template) → 1.0.0
+- Version change: 1.0.0 → 1.1.0 (MINOR)
 - Modified principles:
-  - [PRINCIPLE_1_NAME] → I. Layered Portal Architecture
-  - [PRINCIPLE_2_NAME] → II. Zero Domain Leakage
-  - [PRINCIPLE_3_NAME] → III. Existing Tests Are the Contract
-  - [PRINCIPLE_4_NAME] → IV. Page Object Discipline
-  - [PRINCIPLE_5_NAME] → V. Warehouse as Source of Truth
-  - (expanded from single catch-all) → VI. Observability of Validation Runs
-  - (expanded from single catch-all) → VII. Extract Shared Behavior Only
-- Added sections:
-  - Architecture Constraints
-  - Quality Gates
-  - Governance (ratified)
-- Removed sections: none (template placeholders replaced)
+  - I. Layered Portal Architecture — Layer 2 slicer composition
+  - VII. Extract Shared Behavior Only — authorize report-agnostic slicer chrome
+- Added sections: none
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md (Constitution Check gates)
-  - ✅ .specify/templates/spec-template.md (Architectural Constraints)
-  - ✅ .specify/templates/tasks-template.md (Layer 0 + mandatory smoke gate)
-  - ✅ README.md (layered architecture pointer)
-  - ⚠ .specify/templates/commands/*.md — directory does not exist; skipped
-- Follow-up TODOs: none. Feature implementation of ReportShell is out of
-  scope for this ratification (specify → plan → tasks next).
+  - ✅ .specify/templates/plan-template.md (Extract shared / Layer 2)
+  - ✅ .specify/templates/spec-template.md (Layer 2 architectural constraint)
+  - ✅ .specify/templates/tasks-template.md (core/components path)
+  - ✅ README.md (Layer 2 / Layer 3 table)
+- Follow-up TODOs: none. Strangler Fig method-moves are US1+ in
+  specs/002-generic-slicer/tasks.md, not this amendment.
 -->
 
 # Validation Core Constitution
@@ -36,22 +26,29 @@ pages (today: `MainDashboardPage` in `pages/fleet_dashboard/`) MUST inherit
 from or compose `ReportShell` instead of re-implementing those steps.
 A new report MUST reuse Layer 0 rather than copy portal navigation.
 
-Rationale: `MainDashboardPage` currently mixes generic portal chrome with
-fleet-specific KPIs, slicers, and charts. Without a hard layer boundary,
-every new report will fork SSO and iframe logic.
+Shared Power BI slicer *interaction* (dropdown, checkbox, search, clear-all)
+MAY live in Layer 2 (`core/components/`). Domain pages MUST compose `Slicer`
+and supply definitions plus a settle hook; they MUST NOT copy click-and-retry
+logic into a second report.
+
+Rationale: `MainDashboardPage` mixed generic portal chrome with fleet-specific
+KPIs, slicers, and charts. Without a hard layer boundary, every new report
+forks SSO, iframe, and slicer-chrome logic.
 
 ### II. Zero Domain Leakage (NON-NEGOTIABLE)
-`ReportShell` and every module under `core/` MUST remain report-agnostic.
-Layer 0 MUST NOT contain dashboard-specific terms, locators, or flows,
-including vehicles, district, subunit, fleet KPI titles, chart titles,
-slicer display names, or other labels unique to one report.
+`ReportShell`, `Slicer`, and every module under `core/` MUST remain
+report-agnostic. `core/` MUST NOT contain dashboard-specific terms, locators,
+or flows, including vehicles, district, subunit, fleet KPI titles, chart
+titles, slicer display names, or other labels unique to one report.
 Configuration values (portal URL, catalog URL, search term, timeouts)
-MAY be read from settings. Report-ready state MUST be supplied by the
-domain page via a locator, predicate, or override — never hardcoded to a
-fleet visual such as `total_vehicles_kpi`.
+MAY be read from settings. Generic Power BI chrome phrases (clear all
+slicers, Search placeholders) MAY live in Layer 2. Report-ready state and
+post-select settle MUST be supplied by the domain page via a locator,
+predicate, or hook — never hardcoded to a fleet visual such as
+`total_vehicles_kpi`.
 
-Rationale: Domain strings in the shell make Layer 0 unusable for the next
-Power BI report and hide coupling that refactors cannot see.
+Rationale: Domain strings in `core/` make Layer 0 and Layer 2 unusable for
+the next Power BI report and hide coupling that refactors cannot see.
 
 ### III. Existing Tests Are the Contract (NON-NEGOTIABLE)
 After any change to Layer 0 or to a domain page object's navigation
@@ -95,33 +92,50 @@ Rationale: BI and Validation teams use the CSV and Allure report as the
 audit trail, not pytest stdout.
 
 ### VII. Extract Shared Behavior Only
-Abstractions MUST earn their place. Layer 0 MUST extract only login/SSO,
-catalog search, iframe waiting, and visual-loading timeouts. Fleet
-filters, KPI cards, tabs, tables, charts, tooltips, and drilldown MUST
-stay on the domain page until a second report requires the same behavior.
-Do not invent unused generic APIs.
+Abstractions MUST earn their place.
+
+Layer 0 (`core/portal`) MUST extract only login/SSO, catalog search, iframe
+waiting, and visual-loading timeouts.
+
+Layer 2 (`core/components/`) MAY extract Power BI slicer interaction
+(dropdown, checkbox, search, clear-all) when it is report-agnostic. Domain
+filter *names*, value catalogs, and scenario matrices remain on the domain
+page and in `data/`. `core/` MUST NOT load those files.
+
+KPI cards, tabs, tables, charts, tooltips, and drilldown MUST stay on the
+domain page until a second report requires the same behavior.
+
+Do not invent unused generic APIs beyond the slicer kinds authorized here.
 
 Rationale: Premature generalization of fleet UX recreates the monolith
-under a new name.
+under a new name. Slicer chrome is shared Power BI behavior; fleet labels
+are not.
 
 ## Architecture Constraints
 
 - Layer 0 path is `core/portal/page.py` (`ReportShell`).
+- Layer 2 path is `core/components/slicer.py` (`Slicer`). Domain pages compose
+  it; they MUST NOT put fleet labels inside `core/`.
+- Layer 3 data stays in `data/` (`filters.json`, `filter_matrix.json`) plus
+  domain mapping. `core/` MUST NOT parse those files.
 - Domain path remains `pages/<report>/` (fleet today: `pages/fleet_dashboard/`).
 - Inheritance or composition of `ReportShell` is required; copy-paste of
   portal steps is forbidden after Layer 0 exists.
+- `Slicer` is a collaborator, not a base class. Inheritance chain stays
+  `BasePage` → `ReportShell` → domain page.
 - `BasePage` remains the Playwright timeout/retry foundation; `ReportShell`
   extends or uses it, and domain pages sit above the shell.
 - Settings-driven URLs and search terms are configuration, not domain logic.
-- The warehouse client (`db/`) stays read-only and independent of Layer 0.
+- The warehouse client (`db/`) stays read-only and independent of Layer 0
+  and Layer 2.
 
 ## Quality Gates
 
 - Every implementation plan MUST include a Constitution Check against these
   principles before research and again after design.
-- Layer 0 or navigation refactors MUST include a task to run
-  `pytest` on `tests/ui/fleet_dashboard/` and MUST NOT be declared done
-  unless that suite is 100% green.
+- Layer 0, Layer 2, or navigation/filter-surface refactors MUST include a
+  task to run `pytest` on `tests/ui/fleet_dashboard/` and MUST NOT be
+  declared done unless that suite is 100% green.
 - Reviews MUST reject `core/` changes that introduce report-specific
   locators, labels, or SQL.
 - Coverage catalog and Allure labels MUST stay consistent with page-object
@@ -140,8 +154,8 @@ Versioning:
 
 Compliance review: pull requests and `/speckit-plan` Constitution Checks
 MUST verify layering, zero leakage, and the smoke-test contract. Complexity
-beyond "extract shared portal steps" MUST be justified in the plan's
-Complexity Tracking table. Runtime guidance lives in `README.md` and
-`docs/COVERAGE_CATALOG.md`.
+beyond Layer 0 portal steps or Layer 2 slicer chrome MUST be justified in
+the plan's Complexity Tracking table. Runtime guidance lives in `README.md`
+and `docs/COVERAGE_CATALOG.md`.
 
-**Version**: 1.0.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-23
+**Version**: 1.1.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-24

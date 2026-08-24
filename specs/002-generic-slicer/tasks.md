@@ -22,7 +22,7 @@ step and at completion.
 — implement **sequentially** (US1 → US2 → US3 → US4). Do not start later
 stories in parallel on the same files.
 
-**Constitution**: v1.0.0 — zero domain leakage in `core/`; frozen filter APIs
+**Constitution**: v1.1.0 — zero domain leakage in `core/`; frozen filter APIs
 on `MainDashboardPage` (FR-003). Principle VII MUST be amended before moving
 filter methods (T006).
 
@@ -47,9 +47,10 @@ filter methods (T006).
 
 **Purpose**: Baseline the live suite and add the Layer 2 package without moving behavior
 
-- [ ] T001 Record baseline by running `pytest tests/ui/fleet_dashboard/` and note the result (no code changes)
-- [ ] T002 [P] Create package `core/components/__init__.py` (empty or re-export placeholder only)
-- [ ] T003 Confirm frozen callers in `tests/ui/fleet_dashboard/test_dashboard_filters.py`, `tests/ui/fleet_dashboard/test_dashboard_smoke.py`, `tests/helpers/dashboard_validation.py`, and `tests/e2e/test_filter_matrix.py` (`select_*`, `apply_filters`, `option`, locator aliases, `clear_all_applied_filters`) and do not edit those files
+- [x] T001 Record baseline by running `pytest tests/ui/fleet_dashboard/` and note the result (no code changes)
+  — Live suite not run here (user owns the gate). Last known green: `1a5f652` ReportShell extraction 100%. Re-verify at T008.
+- [x] T002 [P] Create package `core/components/__init__.py` (empty or re-export placeholder only)
+- [x] T003 Confirm frozen callers in `tests/ui/fleet_dashboard/test_dashboard_filters.py`, `tests/ui/fleet_dashboard/test_dashboard_smoke.py`, `tests/helpers/dashboard_validation.py`, and `tests/e2e/test_filter_matrix.py` (`select_*`, `apply_filters`, `option`, locator aliases, `clear_all_applied_filters`) and do not edit those files
 
 ---
 
@@ -59,11 +60,12 @@ filter methods (T006).
 
 **⚠️ CRITICAL**: No user story method-moves until this phase is complete
 
-- [ ] T004 Create `SlicerDefinition` (fields `id`, `role_name`, `kind`, `cascade_rank`, `host`) and `Slicer` in `core/components/slicer.py` with stub methods `select`, `select_many`, `search`, `clear_search`, `clear_all`, `close_open`, `control`, `option_by_role` that are not yet called from the fleet page
-- [ ] T005 Compose `Slicer` on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` (`self._slicer = ...`) while leaving all current filter method bodies unchanged
-- [ ] T006 Amend Principle VII and Architecture Constraints in `.specify/memory/constitution.md` to authorize Layer 2 slicer chrome in `core/components/` while keeping KPI/tabs/charts/tables/drilldown on the domain page; bump constitution version per Governance (MINOR)
-- [ ] T007 [P] Update the layer table in `README.md` to document Layer 2 (`core/components/`) and Layer 3 (`data/filters.json`, `data/filter_matrix.json`) without moving code
+- [x] T004 Create `SlicerDefinition` (fields `id`, `role_name`, `kind`, `cascade_rank`, `host`) and `Slicer` in `core/components/slicer.py` with stub methods `select`, `select_many`, `search`, `clear_search`, `clear_all`, `close_open`, `control`, `option_by_role` that are not yet called from the fleet page
+- [x] T005 Compose `Slicer` on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` (`self._slicer = ...`) while leaving all current filter method bodies unchanged
+- [x] T006 Amend Principle VII and Architecture Constraints in `.specify/memory/constitution.md` to authorize Layer 2 slicer chrome in `core/components/` while keeping KPI/tabs/charts/tables/drilldown on the domain page; bump constitution version per Governance (MINOR)
+- [x] T007 [P] Update the layer table in `README.md` to document Layer 2 (`core/components/`) and Layer 3 (`data/filters.json`, `data/filter_matrix.json`) without moving code
 - [ ] T008 Run `pytest tests/ui/fleet_dashboard/` — MUST pass (behavior still entirely on the page object)
+  — **STOP**: user runs this gate before Phase 3.
 
 **Checkpoint**: `MainDashboardPage` holds a `Slicer`. Import
 `from core.components.slicer import Slicer` works. Principle VII no longer

@@ -111,13 +111,14 @@ allure serve test-results/allure-results
 ```
 config/settings.py          # הגדרות מ-.env
 core/portal/                # Layer 0 — ReportShell (SSO, קטלוג, iframe, timeouts)
+core/components/            # Layer 2 — Slicer גנרי (dropdown / checkbox / search / clear)
 db/                         # לקוח SQL לקריאה בלבד
 pages/fleet_dashboard/      # Page Object של דשבורד הצי (ירושה/הרכבה של ReportShell)
 tests/ui/                   # sanity / smoke
 tests/e2e/                  # רגרסיה UI↔DB
 tests/helpers/              # assert משותפים
-data/filters.json           # ערכי פילטר לדוגמה
-data/filter_matrix.json     # תרחישי מטריצה
+data/filters.json           # Layer 3 — ערכי פילטר לדוגמה
+data/filter_matrix.json     # Layer 3 — תרחישי מטריצה
 reports/test_run_report.py  # כתיבת CSV לריצה
 reports/allure_catalog.py   # Epic / Feature labels ל-Allure
 docs/COVERAGE_CATALOG.md    # קטלוג KPI ↔ DB ↔ טסטים
@@ -129,11 +130,13 @@ docs/COVERAGE_CATALOG.md    # קטלוג KPI ↔ DB ↔ טסטים
 | שכבה | מיקום | מה מותר |
 |------|--------|---------|
 | Layer 0 | `core/portal/` (`ReportShell`) | התחברות/SSO, חיפוש קטלוג, המתנה ל-iframe, timeout לטעינת ויזואל |
-| Domain | `pages/<report>/` | KPI, פילטרים, טאבים, טבלאות, גרפים — לדוגמה צי (`vehicles`, `district`) |
-| Warehouse | `db/` | שאילתות קריאה בלבד; לא חלק מ-Layer 0 |
+| Layer 1 / Domain | `pages/<report>/` | KPI, שמות פילטרים של הדוח, טאבים, טבלאות, גרפים — לדוגמה צי (`vehicles`, `district`) |
+| Layer 2 | `core/components/` (`Slicer`) | אינטראקציה גנרית עם סלייסר Power BI (dropdown, checkbox, search, clear-all) |
+| Layer 3 | `data/filters.json`, `data/filter_matrix.json` | קטלוג ערכים ומטריצת תרחישים (מה לבחור). `core/` לא טוען את הקבצים |
+| Warehouse | `db/` | שאילתות קריאה בלבד; לא חלק מ-Layer 0/2 |
 
-`ReportShell` חייב להישאר גנרי: אסור שידלוף אליו לוגיקה של דשבורד ספציפי.
-אחרי שינוי ב-Layer 0, `pytest` על `tests/ui/fleet_dashboard/` חייב לעבור ב-100%.
+`ReportShell` ו-`Slicer` חייבים להישאר גנריים: אסור שידלוף אליהם לוגיקה של דשבורד ספציפי.
+אחרי שינוי ב-Layer 0 או Layer 2, `pytest` על `tests/ui/fleet_dashboard/` חייב לעבור ב-100%.
 עקרונות מלאים: [`.specify/memory/constitution.md`](.specify/memory/constitution.md).
 
 ---

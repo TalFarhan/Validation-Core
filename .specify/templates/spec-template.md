@@ -106,8 +106,9 @@
 ## Architectural Constraints *(mandatory for core/portal and page-object work)*
 
 <!--
-  Required when the feature touches Layer 0 (`core/portal`), ReportShell,
-  or domain page objects. Omit only for purely documentary or data-catalog work.
+  Required when the feature touches Layer 0 (`core/portal`), Layer 2
+  (`core/components`), ReportShell, or domain page objects. Omit only for
+  purely documentary or data-catalog work.
 -->
 
 - **AC-001**: Layer 0 (`core/portal`) MUST remain report-agnostic. It MUST NOT
@@ -118,6 +119,9 @@
   predicate, or override), never hardcoded in `ReportShell`.
 - **AC-004**: Public test-facing page-object APIs MUST keep their contracts
   unless tests are updated in the same change.
+- **AC-005**: Layer 2 (`core/components/`) MUST remain report-agnostic when
+  present. Domain pages compose `Slicer` and supply definitions plus settle;
+  `core/` MUST NOT load `data/filters.json` or hardcode fleet filter names.
 
 ## Success Criteria *(mandatory)*
 

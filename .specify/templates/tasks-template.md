@@ -24,7 +24,8 @@ MANDATORY and MUST appear as a task that gates completion.
 
 ## Path Conventions
 
-- **Validation Core**: `core/portal/` (Layer 0), `pages/<report>/` (domain),
+- **Validation Core**: `core/portal/` (Layer 0), `core/components/` (Layer 2),
+  `pages/<report>/` (domain), `data/` (Layer 3 catalogs),
   `tests/ui/<report>/` (smoke), `tests/e2e/`, `db/`
 - **Single project**: `src/`, `tests/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`

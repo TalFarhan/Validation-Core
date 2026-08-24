@@ -5,6 +5,7 @@ import allure
 from playwright.sync_api import Page, expect
 
 from config.settings import settings
+from core.components.slicer import Slicer
 from core.portal.page import ReportShell
 from pages.errors import ExpandHierarchyUnavailable, LoadTimeoutError
 from reports.test_run_report import get_current_report
@@ -101,6 +102,8 @@ class MainDashboardPage(ReportShell):
         super().__init__(page)
         self.url = settings.DASHBOARD_URL
         self.dashboard = page.frame_locator("main iframe")
+        # Composed unused until Strangler Fig moves interaction (US1+).
+        self._slicer = Slicer(page=page, frame=self.dashboard)
 
         self.district_dropdown = self.dashboard.get_by_role("combobox", name="Unit", exact=True)
         self.sub_unit_dropdown = self.dashboard.get_by_role("combobox", name="SubUnit", exact=True)

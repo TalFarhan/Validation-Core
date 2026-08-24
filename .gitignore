@@ -9,6 +9,7 @@ __pycache__/
 dist/
 .pytest_cache/
 test-results/
+results/
 allure-results/
 allure-report/
 .DS_Store

@@ -42,13 +42,16 @@
 
 - **Layered portal**: Shared portal/SSO/iframe/timeout logic lives in Layer 0
   (`core/portal`). Domain pages MUST inherit or compose `ReportShell`.
+  Shared slicer chrome MAY live in Layer 2 (`core/components/`).
 - **Zero domain leakage**: `core/` MUST NOT reference vehicles, district,
   fleet KPI titles, slicers, chart titles, or other report-specific labels.
   Report-ready state MUST be a domain locator, predicate, or override.
-- **Test contract**: After Layer 0 or page-object navigation changes, fleet
+- **Test contract**: After Layer 0, Layer 2, or page-object navigation changes, fleet
   smoke tests (`tests/ui/fleet_dashboard/`) MUST pass at 100% via `pytest`.
-- **Extract shared only**: Do not genericize domain filters, KPIs, charts,
-  tables, or drilldown until a second report requires them.
+- **Extract shared only**: Power BI slicer chrome MAY live in Layer 2
+  (`core/components/`). Do not genericize KPI cards, tabs, charts, tables,
+  or drilldown until a second report requires them. Domain filter names
+  and catalogs stay outside `core/`.
 - **Warehouse truth**: E2E assertions remain UI vs SQL through the read-only
   `db` client. Layer 0 MUST NOT embed business SQL.
 - **Observability**: Allure steps, CSV UI logs, screenshots, and traces MUST
@@ -79,9 +82,11 @@ specs/[###-feature]/
 ```text
 # Validation Core (this repository) — prefer this layout when planning here:
 # core/portal/          # Layer 0 ReportShell (generic portal / SSO / iframe)
+# core/components/      # Layer 2 Slicer (dropdown / checkbox / search / clear-all)
 # pages/<report>/       # Domain page objects (fleet: pages/fleet_dashboard/)
-# tests/ui/<report>/    # Smoke / sanity (test contract for Layer 0)
+# tests/ui/<report>/    # Smoke / sanity (test contract for Layer 0 / Layer 2)
 # tests/e2e/            # UI↔DB regression
+# data/                 # Layer 3 filter catalogs and matrices
 # db/                   # Read-only warehouse client
 # config/               # Settings from .env
 
