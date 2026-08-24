@@ -142,12 +142,13 @@ Cascade still applies district before sub-unit.
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Implement cascade-ordered apply in `Slicer` (sort requested ids by `cascade_rank`, then stable order) in `core/components/slicer.py`; change `apply_filters` in `pages/fleet_dashboard/main_dashboard_page.py` to pass only provided ids/labels — keep kwargs `district`, `sub_unit`, `category`, `source`
-- [ ] T021 [US3] Move vehicle search fill/submit/clear into `Slicer.search` / `clear_search` with `host=visual_sandbox` in `core/components/slicer.py`; `search_vehicle`, `clear_vehicle_search`, and `vehicle_search` on `MainDashboardPage` remain the public names
-- [ ] T022 [US3] Change `reset_dashboard_filters` in `pages/fleet_dashboard/main_dashboard_page.py` to orchestrate `clear_search` + `clear_all` (same short-circuit when already clear); `after_navigate` still calls `reset_dashboard_filters`
-- [ ] T023 [US3] Verify `tests/helpers/dashboard_validation.py` `FILTER_SECTIONS` and `resolve_filter_values` stay out of `core/`; `conftest.py` still loads `data/filters.json` and `data/filter_matrix.json`; do not change those JSON shapes
-- [ ] T024 [US3] Document the three-artifact contract (definitions vs catalog vs matrix) by keeping `specs/002-generic-slicer/architecture.md` Configuration Contract as the source of truth; add a short pointer in `docs/COVERAGE_CATALOG.md` section 2 that slicer *mechanics* live in Layer 2 and values stay in `data/filters.json`
+- [x] T020 [US3] Implement cascade-ordered apply in `Slicer` (sort requested ids by `cascade_rank`, then stable order) in `core/components/slicer.py`; change `apply_filters` in `pages/fleet_dashboard/main_dashboard_page.py` to pass only provided ids/labels — keep kwargs `district`, `sub_unit`, `category`, `source`
+- [x] T021 [US3] Move vehicle search fill/submit/clear into `Slicer.search` / `clear_search` with `host=visual_sandbox` in `core/components/slicer.py`; `search_vehicle`, `clear_vehicle_search`, and `vehicle_search` on `MainDashboardPage` remain the public names
+- [x] T022 [US3] Change `reset_dashboard_filters` in `pages/fleet_dashboard/main_dashboard_page.py` to orchestrate `clear_search` + `clear_all` (same short-circuit when already clear); `after_navigate` still calls `reset_dashboard_filters`
+- [x] T023 [US3] Verify `tests/helpers/dashboard_validation.py` `FILTER_SECTIONS` and `resolve_filter_values` stay out of `core/`; `conftest.py` still loads `data/filters.json` and `data/filter_matrix.json`; do not change those JSON shapes
+- [x] T024 [US3] Document the three-artifact contract (definitions vs catalog vs matrix) by keeping `specs/002-generic-slicer/architecture.md` Configuration Contract as the source of truth; add a short pointer in `docs/COVERAGE_CATALOG.md` section 2 that slicer *mechanics* live in Layer 2 and values stay in `data/filters.json`
 - [ ] T025 [US3] Run `pytest tests/ui/fleet_dashboard/` — MUST pass
+  — **STOP**: user runs this gate before Phase 6.
 
 **Checkpoint**: Layer 3 data still drives tests; Layer 2 only sees resolved
 labels. Search + reset delegate to `Slicer`.

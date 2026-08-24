@@ -105,6 +105,12 @@ class MainDashboardPage(ReportShell):
         SlicerDefinition(
             id="category", role_name="VehicleCategory", kind="dropdown"
         ),
+        SlicerDefinition(
+            id="search",
+            role_name="Search",
+            kind="search",
+            host="visual_sandbox",
+        ),
     )
     _SLICER_LISTBOXES = {item.id: item.role_name for item in _SLICER_DEFINITIONS}
 
@@ -125,6 +131,7 @@ class MainDashboardPage(ReportShell):
         self.source_dropdown = self._slicer.control("source")
         self.category_dropdown = self._slicer.control("category")
         self.clear_filters_btn = self._slicer.clear_all_control
+        self.vehicle_search = self._slicer.control("search")
 
         self.total_vehicles_kpi = self._kpi_card(self._KPI_TITLES["total"])
         self.in_use_kpi = self._kpi_card(self._KPI_TITLES["in_use"])
@@ -144,17 +151,6 @@ class MainDashboardPage(ReportShell):
         }
 
         self.vehicle_table = self.dashboard.locator('[role="grid"]').first
-        # Text Search Slicer custom visual lives in a nested sandbox iframe.
-        self._vehicle_search_frame = self.dashboard.frame_locator("iframe.visual-sandbox")
-        self.vehicle_search = self._vehicle_search_frame.locator("input.input-field").or_(
-            self._vehicle_search_frame.get_by_placeholder(re.compile(r"חיפוש|Search", re.I))
-        ).first
-        self._vehicle_search_submit = self._vehicle_search_frame.locator(
-            "button.input-button"
-        ).first
-        self._vehicle_search_clear = self._vehicle_search_frame.locator(
-            "button.input-button"
-        ).nth(1)
 
     def _report_ready_locator(self):
         return self.total_vehicles_kpi
@@ -220,18 +216,35 @@ class MainDashboardPage(ReportShell):
             return False
         if kind == "after_clear":
             previous_total = getattr(self, "_slicer_prev_total", 0)
-            wait_ms = timeout_ms if timeout_ms is not None else self.timeout
-            self.wait_for_kpi_update(
-                "total",
-                previous_total,
-                required=required,
-                timeout_ms=wait_ms,
-            )
+            if timeout_ms is not None:
+                self.wait_for_kpi_update(
+                    "total",
+                    previous_total,
+                    required=required,
+                    timeout_ms=timeout_ms,
+                )
+            else:
+                self.wait_for_kpi_update(
+                    "total",
+                    previous_total,
+                    required=required,
+                )
             last_total = self.get_kpi_value("total", record=False)
             report = get_current_report()
             if report is not None:
                 report.log_kpi_read("total", last_total)
             return last_total != previous_total
+        if kind == "before_search":
+            self._slicer_prev_table = self.get_table_row_count()
+            return False
+        if kind == "after_search":
+            previous_count = getattr(self, "_slicer_prev_table", 0)
+            self._wait_for_table_change(
+                previous_count,
+                required=required,
+                timeout_ms=timeout_ms,
+            )
+            return True
         return False
 
     @allure.step("Select district filter: {district_name}")
@@ -291,9 +304,7 @@ class MainDashboardPage(ReportShell):
         # Fast visibility check — do not inherit DEFAULT_TIMEOUT here.
         if not self.clear_filters_btn.is_visible(timeout=1000):
             return
-        previous_total = self.get_kpi_value("total", record=False)
-        self.clear_filters_btn.click()
-        self.wait_for_kpi_update("total", previous_total, required=False)
+        self._slicer.clear_all(wait_full_timeout=False)
         report = get_current_report()
         if report is not None:
             report.log_ui("Reset dashboard filters to baseline")
@@ -314,16 +325,17 @@ class MainDashboardPage(ReportShell):
         category: str | None = None,
         source: str | None = None,
     ) -> None:
-        # Unit before SubUnit (cascading). Apply Unit early so later slicers
-        # AND with it — selecting Unit last often fails to stick in Power BI.
-        if district is not None:
-            self.select_district(district)
-        if sub_unit is not None:
-            self.select_sub_unit(sub_unit)
-        if category is not None:
-            self.select_category(category)
-        if source is not None:
-            self.select_source(source)
+        selections = {
+            key: value
+            for key, value in (
+                ("district", district),
+                ("sub_unit", sub_unit),
+                ("category", category),
+                ("source", source),
+            )
+            if value is not None
+        }
+        self._slicer.apply(selections)
 
     @allure.step("Select table tab: {tab_name}")
     def select_tab(self, tab_name: str) -> None:
@@ -346,30 +358,10 @@ class MainDashboardPage(ReportShell):
 
     @allure.step("Search vehicle table for: {query}")
     def search_vehicle(self, query: str) -> None:
-        previous_count = self.get_table_row_count()
-        expect(self.vehicle_search).to_be_visible(timeout=self.timeout)
-        self.vehicle_search.click(force=True)
-        self.vehicle_search.fill(str(query))
-        self._vehicle_search_submit.click(force=True)
-        self._wait_for_table_change(previous_count)
+        self._slicer.search("search", query)
 
     def clear_vehicle_search(self) -> None:
-        # Skip when search is already empty — avoids a full optional wait every test.
-        try:
-            current = (self.vehicle_search.input_value(timeout=1000) or "").strip()
-        except Exception:
-            current = ""
-        if not current and self._vehicle_search_clear.count() == 0:
-            return
-
-        previous_count = self.get_table_row_count()
-        if self._vehicle_search_clear.count() > 0:
-            self._vehicle_search_clear.click(force=True)
-        else:
-            self.vehicle_search.click(force=True)
-            self.vehicle_search.fill("")
-            self.vehicle_search.press("Enter")
-        self._wait_for_table_change(previous_count, required=False)
+        self._slicer.clear_search("search")
 
     def table_contains_text(self, text: str) -> bool:
         return self.vehicle_table.get_by_text(str(text), exact=False).count() > 0

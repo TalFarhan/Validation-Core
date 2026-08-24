@@ -53,6 +53,11 @@
 
 מטריצת תרחישים: `data/filter_matrix.json`.
 
+שכבות: **איך** לסנן (dropdown / checkbox / search / clear-all) נמצא ב-Layer 2
+(`core/components/slicer.py`). **מה** לבחור (כינויים ותוויות) נשאר ב-`data/filters.json`.
+חוזה מלא: [`specs/002-generic-slicer/architecture.md`](../specs/002-generic-slicer/architecture.md)
+(Slicer definitions / value catalog / scenario matrix).
+
 ---
 
 ## 3. טאבים וטבלה

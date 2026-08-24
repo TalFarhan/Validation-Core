@@ -10,7 +10,7 @@ from __future__ import annotations
 import re
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Literal, NoReturn
+from typing import Literal
 
 from playwright.sync_api import FrameLocator, Locator, Page, expect
 
@@ -24,6 +24,7 @@ SettleKind = Literal[
     "after_select",
     "before_clear",
     "after_clear",
+    "before_search",
     "after_search",
 ]
 
@@ -31,6 +32,7 @@ _CLEAR_ALL_NAME = re.compile(
     r"נקה את כל|Clear all slicers|Clear all filters",
     re.I,
 )
+_SEARCH_PLACEHOLDER = re.compile(r"חיפוש|Search", re.I)
 
 
 @dataclass(frozen=True)
@@ -81,22 +83,35 @@ class Slicer:
     def _call_settle(self, kind: SettleKind, **kwargs) -> bool:
         return bool(self._settle(kind, **kwargs))
 
-    def _not_wired(self, method: str) -> NoReturn:
-        raise NotImplementedError(
-            f"Slicer.{method} is not wired yet (later Strangler Fig step)."
-        )
-
     def control(self, slicer_id: str) -> Locator:
         definition = self._definition(slicer_id)
         name = definition.role_name
         if definition.kind == "search":
-            self._not_wired("control(search)")
+            field, _submit, _clear = self._search_parts(slicer_id)
+            return field
         if definition.kind == "checkbox":
             # Open list (combobox) or always-visible checklist (listbox).
             return self._frame.get_by_role("combobox", name=name, exact=True).or_(
                 self._frame.get_by_role("listbox", name=name, exact=True)
             )
         return self._frame.get_by_role("combobox", name=name, exact=True)
+
+    def _search_parts(self, slicer_id: str) -> tuple[Locator, Locator, Locator]:
+        definition = self._definition(slicer_id)
+        if definition.kind != "search":
+            raise ValueError(
+                f"Search host requires kind='search', got {definition.kind!r}"
+            )
+        if definition.host == "visual_sandbox":
+            host = self._frame.frame_locator("iframe.visual-sandbox")
+        else:
+            host = self._frame
+        field = host.locator("input.input-field").or_(
+            host.get_by_placeholder(_SEARCH_PLACEHOLDER)
+        ).first
+        submit = host.locator("button.input-button").first
+        clear = host.locator("button.input-button").nth(1)
+        return field, submit, clear
 
     def option_by_role(self, option_name: str, role_name: str) -> Locator:
         return self._frame.get_by_role(
@@ -175,17 +190,65 @@ class Slicer:
             for value in values:
                 report.log_filter(definition.role_name, value)
 
+    def ordered_ids(self, slicer_ids: Sequence[str]) -> list[str]:
+        """Stable sort: lower cascade_rank first; missing rank keeps original order."""
+        indexed = list(enumerate(slicer_ids))
+
+        def sort_key(item: tuple[int, str]) -> tuple[int, int]:
+            position, slicer_id = item
+            rank = self._definition(slicer_id).cascade_rank
+            return (rank if rank is not None else 10**9, position)
+
+        return [slicer_id for _position, slicer_id in sorted(indexed, key=sort_key)]
+
+    def apply(self, selections: dict[str, str]) -> None:
+        """Apply id→label map in cascade order. Ids are opaque to this layer."""
+        for slicer_id in self.ordered_ids(list(selections.keys())):
+            definition = self._definition(slicer_id)
+            value = selections[slicer_id]
+            if definition.kind == "dropdown":
+                self.select(slicer_id, value)
+            elif definition.kind == "checkbox":
+                self.select_many(slicer_id, [value])
+            elif definition.kind == "search":
+                self.search(slicer_id, value)
+            else:
+                raise ValueError(f"Unsupported slicer kind {definition.kind!r}")
+
     def search(self, slicer_id: str, query: str) -> None:
-        self._not_wired("search")
+        field, submit, _clear = self._search_parts(slicer_id)
+        self._call_settle("before_search")
+        expect(field).to_be_visible(timeout=self._timeout)
+        field.click(force=True)
+        field.fill(str(query))
+        submit.click(force=True)
+        self._call_settle("after_search", required=True)
 
     def clear_search(self, slicer_id: str) -> None:
-        self._not_wired("clear_search")
+        field, _submit, clear_btn = self._search_parts(slicer_id)
+        try:
+            current = (field.input_value(timeout=1000) or "").strip()
+        except Exception:
+            current = ""
+        if not current and clear_btn.count() == 0:
+            return
+        self._call_settle("before_search")
+        if clear_btn.count() > 0:
+            clear_btn.click(force=True)
+        else:
+            field.click(force=True)
+            field.fill("")
+            field.press("Enter")
+        self._call_settle("after_search", required=False)
 
-    def clear_all(self) -> None:
+    def clear_all(self, *, wait_full_timeout: bool = True) -> None:
         self._call_settle("before_clear")
         self.clear_all_control.click()
-        self._call_settle(
-            "after_clear",
-            required=False,
-            timeout_ms=self._timeout,
-        )
+        if wait_full_timeout:
+            self._call_settle(
+                "after_clear",
+                required=False,
+                timeout_ms=self._timeout,
+            )
+        else:
+            self._call_settle("after_clear", required=False)
