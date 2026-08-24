@@ -166,10 +166,11 @@ delegates. KPI/tab/chart/table methods remain. Smoke still passes.
 
 ### Implementation for User Story 4
 
-- [ ] T026 [US4] Delete leftover bodies of moved filter helpers (`_select_dropdown_option`, `_dropdown_shows_selection`, `_close_open_slicers` implementations) from `pages/fleet_dashboard/main_dashboard_page.py` so they resolve only via `self._slicer`
-- [ ] T027 [US4] Verify fleet-only APIs (`get_kpi_value`, `click_tab`, `search_vehicle` name, chart/tooltip/drilldown) remain in `pages/fleet_dashboard/main_dashboard_page.py` and were not copied into `core/components/slicer.py` or `core/portal/page.py`
-- [ ] T028 [US4] Verify `conftest.py` is unmodified and `after_navigate` on `MainDashboardPage` still resets filters without Layer 0 importing `Slicer`
+- [x] T026 [US4] Delete leftover bodies of moved filter helpers (`_select_dropdown_option`, `_dropdown_shows_selection`, `_close_open_slicers` implementations) from `pages/fleet_dashboard/main_dashboard_page.py` so they resolve only via `self._slicer`
+- [x] T027 [US4] Verify fleet-only APIs (`get_kpi_value`, `click_tab`, `search_vehicle` name, chart/tooltip/drilldown) remain in `pages/fleet_dashboard/main_dashboard_page.py` and were not copied into `core/components/slicer.py` or `core/portal/page.py`
+- [x] T028 [US4] Verify `conftest.py` is unmodified and `after_navigate` on `MainDashboardPage` still resets filters without Layer 0 importing `Slicer`
 - [ ] T029 [US4] Run `pytest tests/ui/fleet_dashboard/` — MUST pass
+  — **STOP**: user runs the final smoke gate.
 
 **Checkpoint**: Domain page is wrappers + definitions + settle. All four
 stories independently checkable.
@@ -180,9 +181,10 @@ stories independently checkable.
 
 **Purpose**: Leakage, docs, and the binding gate
 
-- [ ] T030 Repeat leakage grep on `core/` (tokens from T018) and fix any remaining hits
-- [ ] T031 Confirm Allure steps on fleet wrappers and CSV `log_filter` / `log_ui` lines still fire for select, apply, clear, and reset
+- [x] T030 Repeat leakage grep on `core/` (tokens from T018) and fix any remaining hits
+- [x] T031 Confirm Allure steps on fleet wrappers and CSV `log_filter` / `log_ui` lines still fire for select, apply, clear, and reset
 - [ ] T032 Run `pytest tests/ui/fleet_dashboard/` — MUST pass 100%. Do not declare the feature done if this fails
+  — Same gate as T029; user runs live suite.
 - [ ] T033 If portal/data environment allows, run `pytest tests/e2e/test_filter_matrix.py` (or the full `tests/e2e/` filter callers) and confirm green without test edits
 
 ---

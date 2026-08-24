@@ -175,9 +175,6 @@ class MainDashboardPage(ReportShell):
     def option(self, option_name: str, listbox_name: str):
         return self._slicer.option_by_role(option_name, listbox_name)
 
-    def _close_open_slicers(self) -> None:
-        self._slicer.close_open()
-
     def _slicer_settle(
         self,
         kind: str = "after_select",
