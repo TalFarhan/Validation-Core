@@ -89,10 +89,10 @@ Existing smoke is the test. Do not write new test modules.
 
 ### Implementation for User Story 2
 
-- [ ] T017 [US2] Implement `_dashboard_ready` / `_report_ready` on `ReportShell` in `core/portal/page.py` as iframe visible AND `_report_ready_locator()` visible; remove any remaining `_dashboard_ready` body from `pages/fleet_dashboard/main_dashboard_page.py`
-- [ ] T018 [US2] Confirm `reload_and_measure_ready_ms` in `core/portal/page.py` polls only `_report_ready_locator()` (no fleet KPI attribute or title)
-- [ ] T019 [US2] Search `core/` (including `core/portal/page.py`) for leakage tokens `vehicles`, `district`, `subunit`, `sub_unit`, `total_vehicles`, `רכבים`, `מחוז`, `reset_dashboard_filters` and remove any hits
-- [ ] T020 [US2] Run `pytest tests/ui/fleet_dashboard/` — MUST pass after hook-only ready and leakage cleanup
+- [x] T017 [US2] Implement `_dashboard_ready` / `_report_ready` on `ReportShell` in `core/portal/page.py` as iframe visible AND `_report_ready_locator()` visible; remove any remaining `_dashboard_ready` body from `pages/fleet_dashboard/main_dashboard_page.py`
+- [x] T018 [US2] Confirm `reload_and_measure_ready_ms` in `core/portal/page.py` polls only `_report_ready_locator()` (no fleet KPI attribute or title)
+- [x] T019 [US2] Search `core/` (including `core/portal/page.py`) for leakage tokens `vehicles`, `district`, `subunit`, `sub_unit`, `total_vehicles`, `רכבים`, `מחוז`, `reset_dashboard_filters` and remove any hits
+- [x] T020 [US2] Run `pytest tests/ui/fleet_dashboard/` — MUST pass after hook-only ready and leakage cleanup
 
 **Checkpoint**: A second report could override `_report_ready_locator` without inheriting fleet KPI names.
 
@@ -106,12 +106,12 @@ Existing smoke is the test. Do not write new test modules.
 
 ### Implementation for User Story 3
 
-- [ ] T021 [US3] Add a thin `navigate` wrapper on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` with `@allure.step("Navigate to Fleet Dashboard")` that only calls `super().navigate(*, force_reload=force_reload)` (same signature)
-- [ ] T022 [US3] Add a thin `reload_and_measure_ready_ms` wrapper on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` if the current Allure title must stay fleet-specific; otherwise leave the shell method and keep CSV `log_ui` lines in `core/portal/page.py` generic
-- [ ] T023 [US3] Delete any leftover bodies of FR-010 portal methods from `pages/fleet_dashboard/main_dashboard_page.py` so they resolve only via inheritance from `core/portal/page.py`
-- [ ] T024 [US3] Verify fleet-only APIs (`select_district`, `apply_filters`, `get_kpi_value`, `search_vehicle`, `hover_chart`, drilldown) remain in `pages/fleet_dashboard/main_dashboard_page.py` and were not copied into `core/portal/page.py`
-- [ ] T025 [US3] Verify `conftest.py` is unmodified and still resolves `_dashboard_ready`, `_recover_from_portal_glitch`, and `_is_portal_profile_error` on `MainDashboardPage`
-- [ ] T026 [US3] Run `pytest tests/ui/fleet_dashboard/` — MUST pass
+- [x] T021 [US3] Add a thin `navigate` wrapper on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` with `@allure.step("Navigate to Fleet Dashboard")` that only calls `super().navigate(*, force_reload=force_reload)` (same signature)
+- [x] T022 [US3] Add a thin `reload_and_measure_ready_ms` wrapper on `MainDashboardPage` in `pages/fleet_dashboard/main_dashboard_page.py` if the current Allure title must stay fleet-specific; otherwise leave the shell method and keep CSV `log_ui` lines in `core/portal/page.py` generic
+- [x] T023 [US3] Delete any leftover bodies of FR-010 portal methods from `pages/fleet_dashboard/main_dashboard_page.py` so they resolve only via inheritance from `core/portal/page.py`
+- [x] T024 [US3] Verify fleet-only APIs (`select_district`, `apply_filters`, `get_kpi_value`, `search_vehicle`, `hover_chart`, drilldown) remain in `pages/fleet_dashboard/main_dashboard_page.py` and were not copied into `core/portal/page.py`
+- [x] T025 [US3] Verify `conftest.py` is unmodified and still resolves `_dashboard_ready`, `_recover_from_portal_glitch`, and `_is_portal_profile_error` on `MainDashboardPage`
+- [x] T026 [US3] Run `pytest tests/ui/fleet_dashboard/` — MUST pass
 
 **Checkpoint**: Domain page is a report on the shell. All three stories independently checkable.
 
@@ -121,10 +121,10 @@ Existing smoke is the test. Do not write new test modules.
 
 **Purpose**: Final contract and docs. Depends on US1–US3.
 
-- [ ] T027 Re-run leakage scan on `core/` per `specs/001-extract-report-shell/contracts/report-shell-api.md`
-- [ ] T028 Confirm `pages/base_page.py` and `db/` were not modified
-- [ ] T029 [P] Tick the Done-when checklist in `specs/001-extract-report-shell/quickstart.md`
-- [ ] T030 Run `pytest tests/ui/fleet_dashboard/` — MUST pass 100% (final constitution gate)
+- [x] T027 Re-run leakage scan on `core/` per `specs/001-extract-report-shell/contracts/report-shell-api.md`
+- [x] T028 Confirm `pages/base_page.py` and `db/` were not modified
+- [x] T029 [P] Tick the Done-when checklist in `specs/001-extract-report-shell/quickstart.md`
+- [x] T030 Run `pytest tests/ui/fleet_dashboard/` — MUST pass 100% (final constitution gate)
 
 ---
 

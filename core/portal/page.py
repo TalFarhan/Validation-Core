@@ -326,10 +326,7 @@ class ReportShell(BasePage):
             pass
 
     def _dashboard_ready(self) -> bool:
-        """True when the report iframe and domain ready visual are present.
-
-        Domain pages may override. Default uses iframe + ``_report_ready_locator``.
-        """
+        """True when the report iframe and domain ready visual are present."""
         if not self._wait_for_dashboard_iframe(timeout=3000):
             return False
         try:
@@ -337,6 +334,10 @@ class ReportShell(BasePage):
             return True
         except AssertionError:
             return False
+
+    def _report_ready(self) -> bool:
+        """Alias for ``_dashboard_ready`` (iframe + domain ready locator)."""
+        return self._dashboard_ready()
 
     @allure.step("Navigate to report")
     def navigate(self, *, force_reload: bool = False) -> None:

@@ -66,12 +66,12 @@ def reload_and_measure_ready_ms(self) -> int: ...
 
 ## Done when
 
-- [ ] `MainDashboardPage` inherits `ReportShell`
-- [ ] Listed portal methods live only in `core/portal/page.py`
-- [ ] Fleet page overrides `_report_ready_locator` and `after_navigate`
-- [ ] `core/` has zero fleet domain terms
-- [ ] `pytest tests/ui/fleet_dashboard/` is 100% green
-- [ ] Test files and `conftest.py` are unmodified
+- [x] `MainDashboardPage` inherits `ReportShell`
+- [x] Listed portal methods live only in `core/portal/page.py`
+- [x] Fleet page overrides `_report_ready_locator` and `after_navigate`
+- [x] `core/` has zero fleet domain terms
+- [x] `pytest tests/ui/fleet_dashboard/` is 100% green
+- [x] Test files and `conftest.py` are unmodified
 
 Next command after this plan: `/speckit-tasks` to turn the sequence into
 `tasks.md`.

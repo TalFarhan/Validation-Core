@@ -151,18 +151,16 @@ class MainDashboardPage(ReportShell):
     def _kpi_card(self, title: str):
         return self.dashboard.get_by_role("button", name=re.compile(re.escape(title)))
 
-    def _dashboard_ready(self) -> bool:
-        """True when the Power BI report (iframe + domain ready visual) is open."""
-        if not self._wait_for_dashboard_iframe(timeout=3000):
-            return False
-        try:
-            expect(self._report_ready_locator()).to_be_visible(timeout=5000)
-            return True
-        except AssertionError:
-            return False
-
     def after_navigate(self) -> None:
         self.reset_dashboard_filters()
+
+    @allure.step("Navigate to Fleet Dashboard")
+    def navigate(self, *, force_reload: bool = False) -> None:
+        super().navigate(force_reload=force_reload)
+
+    @allure.step("Reload dashboard and measure time until KPI ready")
+    def reload_and_measure_ready_ms(self) -> int:
+        return super().reload_and_measure_ready_ms()
 
     def option(self, option_name: str, listbox_name: str):
         return self.dashboard.get_by_role("listbox", name=listbox_name, exact=True).get_by_role(
