@@ -85,12 +85,18 @@ on `MainDashboardPage`. `conftest.py` unchanged.
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Move `_close_open_slicers` from `pages/fleet_dashboard/main_dashboard_page.py` into `Slicer.close_open` in `core/components/slicer.py`; fleet method becomes a one-line delegate; run `pytest tests/ui/fleet_dashboard/`
-- [ ] T010 [US1] Move `option(option_name, listbox_name)` body into `Slicer.option_by_role` in `core/components/slicer.py`; keep the two-arg `MainDashboardPage.option` signature tests use (including literal `"SubUnit"`); run `pytest tests/ui/fleet_dashboard/`
-- [ ] T011 [US1] Move `_dropdown_shows_selection` and `_select_dropdown_option` into `Slicer.select` (dropdown kind) in `core/components/slicer.py`; inject a domain settle hook so the moved body does not name `total_vehicles_kpi` / `get_kpi_value`; preserve retry-once and `log_filter`; run `pytest tests/ui/fleet_dashboard/`
-- [ ] T012 [US1] Change `select_district`, `select_sub_unit`, `select_source`, and `select_category` in `pages/fleet_dashboard/main_dashboard_page.py` into Allure wrappers that call `self._slicer.select(<id>, name)` with page-owned ids; keep method names and signatures; run `pytest tests/ui/fleet_dashboard/`
-- [ ] T013 [US1] Move clear-all click into `Slicer.clear_all` in `core/components/slicer.py` using the generic clear-all name pattern; `clear_all_applied_filters` on `MainDashboardPage` delegates then settle; run `pytest tests/ui/fleet_dashboard/`
-- [ ] T014 [US1] Point locator aliases `district_dropdown`, `sub_unit_dropdown`, `source_dropdown`, `category_dropdown`, and `clear_filters_btn` in `pages/fleet_dashboard/main_dashboard_page.py` at `self._slicer.control(...)` / clear-all control so `test_dashboard_smoke.py` visibility checks stay valid; run `pytest tests/ui/fleet_dashboard/`
+- [x] T009 [US1] Move `_close_open_slicers` from `pages/fleet_dashboard/main_dashboard_page.py` into `Slicer.close_open` in `core/components/slicer.py`; fleet method becomes a one-line delegate; run `pytest tests/ui/fleet_dashboard/`
+  — Live pytest deferred to user (Phase 3 pause).
+- [x] T010 [US1] Move `option(option_name, listbox_name)` body into `Slicer.option_by_role` in `core/components/slicer.py`; keep the two-arg `MainDashboardPage.option` signature tests use (including literal `"SubUnit"`); run `pytest tests/ui/fleet_dashboard/`
+  — Live pytest deferred to user (Phase 3 pause).
+- [x] T011 [US1] Move `_dropdown_shows_selection` and `_select_dropdown_option` into `Slicer.select` (dropdown kind) in `core/components/slicer.py`; inject a domain settle hook so the moved body does not name `total_vehicles_kpi` / `get_kpi_value`; preserve retry-once and `log_filter`; run `pytest tests/ui/fleet_dashboard/`
+  — Live pytest deferred to user (Phase 3 pause).
+- [x] T012 [US1] Change `select_district`, `select_sub_unit`, `select_source`, and `select_category` in `pages/fleet_dashboard/main_dashboard_page.py` into Allure wrappers that call `self._slicer.select(<id>, name)` with page-owned ids; keep method names and signatures; run `pytest tests/ui/fleet_dashboard/`
+  — Live pytest deferred to user (Phase 3 pause).
+- [x] T013 [US1] Move clear-all click into `Slicer.clear_all` in `core/components/slicer.py` using the generic clear-all name pattern; `clear_all_applied_filters` on `MainDashboardPage` delegates then settle; run `pytest tests/ui/fleet_dashboard/`
+  — Live pytest deferred to user (Phase 3 pause).
+- [x] T014 [US1] Point locator aliases `district_dropdown`, `sub_unit_dropdown`, `source_dropdown`, `category_dropdown`, and `clear_filters_btn` in `pages/fleet_dashboard/main_dashboard_page.py` at `self._slicer.control(...)` / clear-all control so `test_dashboard_smoke.py` visibility checks stay valid; run `pytest tests/ui/fleet_dashboard/`
+  — **STOP**: user runs this gate before Phase 4.
 
 **Checkpoint**: MVP — dropdown select, option lookup, close-open, and clear-all
 work through `Slicer` with frozen page APIs. Smoke 100% green. Do not proceed

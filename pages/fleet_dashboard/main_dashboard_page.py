@@ -5,7 +5,7 @@ import allure
 from playwright.sync_api import Page, expect
 
 from config.settings import settings
-from core.components.slicer import Slicer
+from core.components.slicer import Slicer, SlicerDefinition
 from core.portal.page import ReportShell
 from pages.errors import ExpandHierarchyUnavailable, LoadTimeoutError
 from reports.test_run_report import get_current_report
@@ -91,29 +91,40 @@ class MainDashboardPage(ReportShell):
         re.I,
     )
 
-    _SLICER_LISTBOXES = {
-        "district": "Unit",
-        "sub_unit": "SubUnit",
-        "source": "VehicleSource",
-        "category": "VehicleCategory",
-    }
+    # Page-owned definitions. Role names stay here so core/ stays report-agnostic.
+    _SLICER_DEFINITIONS = (
+        SlicerDefinition(
+            id="district", role_name="Unit", kind="dropdown", cascade_rank=0
+        ),
+        SlicerDefinition(
+            id="sub_unit", role_name="SubUnit", kind="dropdown", cascade_rank=1
+        ),
+        SlicerDefinition(
+            id="source", role_name="VehicleSource", kind="dropdown"
+        ),
+        SlicerDefinition(
+            id="category", role_name="VehicleCategory", kind="dropdown"
+        ),
+    )
+    _SLICER_LISTBOXES = {item.id: item.role_name for item in _SLICER_DEFINITIONS}
 
     def __init__(self, page: Page):
         super().__init__(page)
         self.url = settings.DASHBOARD_URL
         self.dashboard = page.frame_locator("main iframe")
-        # Composed unused until Strangler Fig moves interaction (US1+).
-        self._slicer = Slicer(page=page, frame=self.dashboard)
-
-        self.district_dropdown = self.dashboard.get_by_role("combobox", name="Unit", exact=True)
-        self.sub_unit_dropdown = self.dashboard.get_by_role("combobox", name="SubUnit", exact=True)
-        self.source_dropdown = self.dashboard.get_by_role("combobox", name="VehicleSource", exact=True)
-        self.category_dropdown = self.dashboard.get_by_role("combobox", name="VehicleCategory", exact=True)
-        # Power BI may expose this control in Hebrew or English depending on locale.
-        self.clear_filters_btn = self.dashboard.get_by_role(
-            "button",
-            name=re.compile(r"נקה את כל|Clear all slicers|Clear all filters", re.I),
+        self._slicer = Slicer(
+            page=page,
+            frame=self.dashboard,
+            definitions=self._SLICER_DEFINITIONS,
+            settle=self._slicer_settle,
+            timeout_ms=self.timeout,
         )
+
+        self.district_dropdown = self._slicer.control("district")
+        self.sub_unit_dropdown = self._slicer.control("sub_unit")
+        self.source_dropdown = self._slicer.control("source")
+        self.category_dropdown = self._slicer.control("category")
+        self.clear_filters_btn = self._slicer.clear_all_control
 
         self.total_vehicles_kpi = self._kpi_card(self._KPI_TITLES["total"])
         self.in_use_kpi = self._kpi_card(self._KPI_TITLES["in_use"])
@@ -166,37 +177,27 @@ class MainDashboardPage(ReportShell):
         return super().reload_and_measure_ready_ms()
 
     def option(self, option_name: str, listbox_name: str):
-        return self.dashboard.get_by_role("listbox", name=listbox_name, exact=True).get_by_role(
-            "option", name=option_name, exact=True
-        )
+        return self._slicer.option_by_role(option_name, listbox_name)
 
     def _close_open_slicers(self) -> None:
-        self.page.keyboard.press("Escape")
-        self.page.keyboard.press("Escape")
+        self._slicer.close_open()
 
-    def _dropdown_shows_selection(self, dropdown_locator, option_name: str) -> bool:
-        try:
-            text = (dropdown_locator.inner_text() or "").replace("\u200f", "")
-            return option_name in text
-        except Exception:
+    def _slicer_settle(
+        self,
+        kind: str = "after_select",
+        *,
+        required: bool = False,
+        timeout_ms: int | None = None,
+    ) -> bool:
+        """Domain settle: dismiss/wait on fleet KPI cards. Layer 2 never names them."""
+        if kind == "before_select":
+            self._slicer_prev_total = self.get_kpi_value("total", record=False)
+            self._slicer_prev_in_use = self.get_kpi_value("in_use", record=False)
             return False
-
-    def _select_dropdown_option(
-        self, dropdown_locator, option_name: str, listbox_name: str
-    ) -> None:
-        last_total: int | None = None
-        for attempt in range(2):
-            self._close_open_slicers()
-            previous_total = self.get_kpi_value("total", record=False)
-            previous_in_use = self.get_kpi_value("in_use", record=False)
-            dropdown_locator.click(force=True)
-            option = self.option(option_name, listbox_name)
-            expect(option).to_be_visible(timeout=self.timeout)
-            option.scroll_into_view_if_needed()
-            option.click(force=True)
-            self.total_vehicles_kpi.click(force=True)
-            # Power BI refreshes KPI cards asynchronously — total often updates
-            # before in_use; wait for both so assertions don't read a stale card.
+        if kind == "after_select":
+            self._report_ready_locator().click(force=True)
+            previous_total = getattr(self, "_slicer_prev_total", 0)
+            previous_in_use = getattr(self, "_slicer_prev_in_use", 0)
             self.wait_for_kpi_update(
                 "total",
                 previous_total,
@@ -210,40 +211,44 @@ class MainDashboardPage(ReportShell):
                 timeout_ms=self.timeout,
             )
             last_total = self.get_kpi_value("total", record=False)
-            selected = self._dropdown_shows_selection(dropdown_locator, option_name)
-            changed = last_total != previous_total
-            if selected or changed or attempt == 1:
-                break
-
-        report = get_current_report()
-        if report is not None:
-            report.log_filter(listbox_name, option_name)
-            if last_total is not None:
+            report = get_current_report()
+            if report is not None:
                 report.log_kpi_read("total", last_total)
+            return last_total != previous_total
+        if kind == "before_clear":
+            self._slicer_prev_total = self.get_kpi_value("total", record=False)
+            return False
+        if kind == "after_clear":
+            previous_total = getattr(self, "_slicer_prev_total", 0)
+            wait_ms = timeout_ms if timeout_ms is not None else self.timeout
+            self.wait_for_kpi_update(
+                "total",
+                previous_total,
+                required=required,
+                timeout_ms=wait_ms,
+            )
+            last_total = self.get_kpi_value("total", record=False)
+            report = get_current_report()
+            if report is not None:
+                report.log_kpi_read("total", last_total)
+            return last_total != previous_total
+        return False
 
     @allure.step("Select district filter: {district_name}")
     def select_district(self, district_name: str) -> None:
-        self._select_dropdown_option(
-            self.district_dropdown, district_name, self._SLICER_LISTBOXES["district"]
-        )
+        self._slicer.select("district", district_name)
 
     @allure.step("Select sub-unit filter: {sub_unit_name}")
     def select_sub_unit(self, sub_unit_name: str) -> None:
-        self._select_dropdown_option(
-            self.sub_unit_dropdown, sub_unit_name, self._SLICER_LISTBOXES["sub_unit"]
-        )
+        self._slicer.select("sub_unit", sub_unit_name)
 
     @allure.step("Select source filter: {source_name}")
     def select_source(self, source_name: str) -> None:
-        self._select_dropdown_option(
-            self.source_dropdown, source_name, self._SLICER_LISTBOXES["source"]
-        )
+        self._slicer.select("source", source_name)
 
     @allure.step("Select category filter: {category_name}")
     def select_category(self, category_name: str) -> None:
-        self._select_dropdown_option(
-            self.category_dropdown, category_name, self._SLICER_LISTBOXES["category"]
-        )
+        self._slicer.select("category", category_name)
 
     @allure.step("Click tab: {tab_name}")
     def click_tab(self, tab_name: str) -> None:
@@ -295,20 +300,10 @@ class MainDashboardPage(ReportShell):
 
     @allure.step("Clear all applied filters")
     def clear_all_applied_filters(self) -> None:
-        filtered_total = self.get_kpi_value("total", record=False)
-        self.clear_filters_btn.click()
-        # Already-clear dashboards may keep the same KPI after the click.
-        # Allow full budget so a real clear can finish; return early on change.
-        self.wait_for_kpi_update(
-            "total",
-            filtered_total,
-            required=False,
-            timeout_ms=self.timeout,
-        )
+        self._slicer.clear_all()
         report = get_current_report()
         if report is not None:
             report.log_ui("Cleared all applied filters")
-            report.log_kpi_read("total", self.get_kpi_value("total", record=False))
 
     @allure.step("Apply filters on dashboard")
     def apply_filters(
