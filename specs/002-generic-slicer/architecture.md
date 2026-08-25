@@ -6,7 +6,8 @@
 
 This document is the architectural plan for Layer 2 (slicer interaction) and
 Layer 3 (filter configuration). Formal implementation order is [tasks.md](./tasks.md).
-The Strangler Fig sequence below is normative: tasks MUST follow it.
+The Strangler Fig sequence is phases **P0–P9**. Tasks MUST follow that order.
+User stories (US1–US4) are tags on tasks, not phases.
 
 ## Summary
 
@@ -20,7 +21,9 @@ then move, never big-bang.
 Technical approach: **composition + config + settle hook**. The component
 knows how to operate dropdowns, checkboxes, search fields, and clear-all.
 The fleet page knows that "district" is a dropdown whose accessible name is
-`Unit`. After every major step, `pytest tests/ui/fleet_dashboard/` stays green.
+`Unit`. After every **gated** phase (P0, P1, P3–P7, P9),
+`pytest tests/ui/fleet_dashboard/` stays green. P2 (definitions + settle) and
+P8 (checkbox `select_many`) have no fleet pytest gate.
 
 ## Technical Context
 
@@ -35,9 +38,10 @@ the Layer 3 files. No warehouse schema changes. `core/` MUST NOT read them.
 
 **Testing**: `pytest` + Playwright Chromium. Binding gate:
 `pytest tests/ui/fleet_dashboard/` (includes `test_dashboard_filters.py` and
-slicer visibility in `test_dashboard_smoke.py`). Regression callers in
-`tests/e2e/` (especially `test_filter_matrix.py`) must stay green. Do not
-edit existing test modules or `conftest.py`.
+slicer visibility in `test_dashboard_smoke.py`). One Quality Gate per gated
+phase; P2 and P8 have none. P9 also runs e2e filter callers when the
+environment allows (`tests/e2e/test_filter_matrix.py`). Do not edit existing
+test modules or `conftest.py`.
 
 **Target Platform**: Windows workstation + Chromium, organizational Agamim
 portal + Microsoft SSO (same as today).
@@ -68,7 +72,8 @@ aliases on the fleet page. KPI, tab, table, chart, tooltip, drilldown stay put.
   subunit, KPI/chart titles. Generic chrome (Clear all slicers / Search) is
   allowed.
 - **Test contract**: PASS — `pytest tests/ui/fleet_dashboard/` at 100% after
-  each major Strangler step and at completion; no test-file edits.
+  each gated Strangler phase (P0, P1, P3–P7, P9) and at completion; no
+  test-file edits. P2 and P8 are ungated.
 - **Extract shared only**: PASS after Principle VII amendment (FR-015) —
   extract Power BI slicer chrome (dropdown/checkbox/search/clear-all). KPI,
   tabs, table, charts, tooltips, drilldown stay on the domain page.
@@ -157,8 +162,10 @@ Slicer(
 )
 ```
 
-The fleet page builds this once in `__init__` (or lazily) and keeps the
-existing locator attributes as aliases:
+P1 constructs `self._slicer` with unused stubs. **P2** (before any method
+move) supplies the page-owned `SlicerDefinition` list and the settle hook.
+The fleet page keeps existing locator attributes as aliases (dropdowns in
+P4, `clear_filters_btn` in P5):
 
 ```text
 self.district_dropdown = self._slicer.control("district")
@@ -188,6 +195,7 @@ Fleet implementation (stays on `MainDashboardPage`):
   `_wait_for_table_change`).
 
 The slicer calls `settle` after the interaction; it does not poll KPIs.
+Wire this hook in **P2** so P4 `Slicer.select` never names fleet KPI cards.
 
 ### Generic chrome allowed in `core/`
 
@@ -206,11 +214,15 @@ values, not hardcoded fleet terms). Fleet Allure step titles
 ## Configuration Contract (Layer 3)
 
 Three artifacts. Do not collapse them into one JSON blob in `core/`.
+**SlicerDefinition** (artifact 1) is introduced in **P2**, before close-open,
+select, or any other method extraction. Catalog and matrix shapes are
+verified in **P7**; they are not loaded from `core/` at any phase.
 
-### 1. Slicer definitions (how)
+### 1. Slicer definitions (how) — P2
 
 Owned by the domain page as a tuple/list constant. Not loaded from
-`filters.json`.
+`filters.json`. Introduced in P2 together with the settle hook, while
+filter method bodies still live on the page.
 
 | Field | Meaning | Fleet example (lives on the page, not in core) |
 |-------|---------|--------------------------------------------------|
@@ -336,91 +348,129 @@ No change required except that `after_navigate` continues to call fleet
 
 ## Implementation Approach: Strangler Fig
 
-Each step MUST leave the project importable. After every **major** step
-(marked GATE), run `pytest tests/ui/fleet_dashboard/` and fix before
-continuing. Do not skip ahead to deleting `_select_dropdown_option` while
-wrappers still need it.
+Phases **P0–P9** match [tasks.md](./tasks.md). Each phase MUST leave the
+project importable. After every **gated** phase, run
+`pytest tests/ui/fleet_dashboard/` and fix before continuing. P2 and P8
+have no fleet pytest gate. Do not skip ahead to deleting
+`_select_dropdown_option` while wrappers still need it. Do not extract
+methods before P2 definitions and settle exist.
 
-### Step 0 — Baseline (GATE)
+| Phase | What | GATE |
+|-------|------|------|
+| P0 | Baseline | smoke |
+| P1 | Empty compose + constitution | smoke |
+| P2 | `SlicerDefinition` + settle hook | **none** |
+| P3 | Close-open + option | smoke |
+| P4 | Dropdown select + wrappers | smoke |
+| P5 | Clear-all | smoke |
+| P6 | Search + reset | smoke |
+| P7 | Cascade apply + Layer 3 contract | smoke |
+| P8 | Checkbox `select_many` | **none** |
+| P9 | Cleanup, one leakage grep, Allure | smoke + e2e |
+
+### P0 — Baseline (GATE)
 
 - Record current smoke result. Do not change behavior.
 - Confirm callers: `select_*`, `apply_filters`, `option`, locator attributes,
   `reset_dashboard_filters` from `after_navigate`, helper in
   `tests/helpers/dashboard_validation.py`.
 
-### Step 1 — Empty component + compose (GATE)
+### P1 — Empty compose & constitution (GATE)
 
 - Add `core/components/__init__.py` and `core/components/slicer.py`.
-- `SlicerDefinition` + `Slicer` with methods raising `NotImplementedError`
-  or empty stubs **not yet called**.
+- `Slicer` with methods raising `NotImplementedError` or empty stubs
+  **not yet called**. Do **not** add the page-owned definition list yet.
 - Construct `self._slicer` on `MainDashboardPage` but keep all current
   method bodies.
+- Amend Principle VII (FR-015) and the README layer table so Layer 2 is
+  authorized before any method move.
 - **Do not move methods.** Tests pass because behavior still sits on the
   page.
 
-### Step 2 — Close-open + option locators (GATE)
+### P2 — Definitions + settle (no GATE)
+
+- Introduce `SlicerDefinition` (`id`, `role_name`, `kind`, `cascade_rank`,
+  `host`) in `core/components/slicer.py`.
+- Move fleet accessible names into a page-owned definition list on
+  `MainDashboardPage` (Unit, SubUnit, VehicleSource, VehicleCategory).
+  `Slicer` reads only `definitions` and MUST NOT hardcode those role names.
+- Implement the domain settle hook on `MainDashboardPage` and pass it into
+  `Slicer` construction. Layer 2 only *calls* the hook.
+- Filter interaction still lives on the page. No fleet pytest gate.
+
+### P3 — Close-open + option (GATE)
 
 - Move `_close_open_slicers` and `option(...)` bodies into `Slicer`.
 - Fleet `option` and `_close_open_slicers` become one-line delegates.
 - Tests that call `dashboard.option(..., "SubUnit")` still work.
 
-### Step 3 — Dropdown select (GATE)
+### P4 — Dropdown select + wrappers (GATE)
 
 - Move `_select_dropdown_option` / `_dropdown_shows_selection` into
   `Slicer.select` for `kind=dropdown`.
-- Inject settle hook; stop naming `total_vehicles_kpi` inside the moved
-  body — fleet settle clicks that card.
+- Call the **P2** settle hook; do not name `total_vehicles_kpi` inside the
+  moved body — fleet settle clicks that card.
 - `select_district` and siblings become Allure wrappers around
   `self._slicer.select("district", name)`.
+- Point dropdown locator aliases at `self._slicer.control(...)`.
 - Retry-once and CSV `log_filter` preserved.
 
-### Step 4 — Clear-all (GATE)
+### P5 — Clear-all (GATE)
 
 - Move clear-all click + optional wait into `Slicer.clear_all`.
-- `clear_all_applied_filters` and the filter-button half of
-  `reset_dashboard_filters` delegate. Search clear still on the page until
-  Step 5.
+- `clear_all_applied_filters` delegates then settle. Point
+  `clear_filters_btn` at the slicer clear-all control.
+- Search clear still on the page until P6.
 
-### Step 5 — Search (GATE)
+### P6 — Search + reset (GATE)
 
 - Move fill/submit/clear-search into `Slicer.search` / `clear_search`
   with `host=visual_sandbox`.
 - `search_vehicle` / `clear_vehicle_search` become wrappers.
 - `reset_dashboard_filters` delegates both search clear and clear-all.
+  `after_navigate` still calls `reset_dashboard_filters`.
 
-### Step 6 — Config-driven apply (GATE)
+### P7 — Cascade apply + Layer 3 contract (GATE)
 
-- Fleet builds the definition list; `apply_filters` iterates resolved
-  labels in cascade order via `Slicer`.
-- Delete remaining duplicated click loops from the fleet page.
-- Locator aliases still assigned from `slicer.control(id)`.
+- `apply_filters` iterates resolved labels in cascade order via `Slicer`
+  (sort provided ids by `cascade_rank`, then stable original order).
+  Keep kwargs `district`, `sub_unit`, `category`, `source`.
+- Verify `FILTER_SECTIONS` / alias resolution stay out of `core/`;
+  `filters.json` and `filter_matrix.json` shapes unchanged; `conftest.py`
+  still loads those files.
+- Document the three-artifact contract (this section) and a short pointer
+  in `docs/COVERAGE_CATALOG.md`. Definitions themselves were already
+  introduced in P2 — do not rebuild them here.
 
-### Step 7 — Checkbox path (no fleet caller required)
+### P8 — Checkbox `select_many` (no GATE)
 
 - Implement `select_many` for `kind=checkbox`.
 - No test rewrite. Covered by unit-level logic or left unused until a
   second report. MUST exist so Layer 2 matches the spec.
+- No fleet pytest gate. Do not change fleet dropdowns to checkboxes.
 
-### Step 8 — Leakage audit
+### P9 — Cleanup, leakage, Allure (GATE: smoke + e2e)
 
-Search `core/` for: vehicles, district, subunit, fleet KPI titles, chart
-titles, `total_vehicles`, `select_district`, `reset_dashboard_filters`,
-`מחוז`, `רכבים`. Must be zero. Generic words (slicer, dropdown, combobox,
-listbox, iframe, search, filter) are allowed. Runtime parameters are
-allowed. Settings keys are allowed.
-
-### Step 9 — Final gate
-
-- `pytest tests/ui/fleet_dashboard/` MUST be 100% green.
-- Do not edit test files. If e2e is run, `tests/e2e/` stays green.
-- `conftest.py` unchanged.
-- Constitution Principle VII updated and README layer table mentions
-  Layer 2 / Layer 3.
+- Delete leftover bodies of moved helpers from `MainDashboardPage` so they
+  resolve only via `self._slicer`.
+- Verify fleet-only APIs (KPI/tab/chart/tooltip/drilldown) were not copied
+  into `core/`. `conftest.py` unmodified. Layer 0 does not import `Slicer`.
+- **One** leakage grep on `core/` for: vehicles, district, subunit,
+  `sub_unit`, fleet KPI titles, chart titles, `total_vehicles`,
+  `select_district`, `reset_dashboard_filters`, `מחוז`, `רכבים`. Must be
+  zero. Generic words (slicer, dropdown, combobox, listbox, iframe, search,
+  filter) are allowed. Runtime parameters and settings keys are allowed.
+- Confirm Allure steps and CSV `log_filter` / `log_ui` still fire.
+- `pytest tests/ui/fleet_dashboard/` MUST be 100% green. If the environment
+  allows, `tests/e2e/test_filter_matrix.py` stays green. Do not edit test
+  files.
 
 ## Constitution Amendment (FR-015)
 
 Principle VII today forbids extracting filters until a second report needs
 them. This feature **is** that extraction of shared slicer chrome.
+**Execute this amendment in P1**, before P2 definitions and before any
+method move.
 
 Amend Principle VII to:
 
@@ -432,7 +482,7 @@ Amend Principle VII to:
 - Do not invent unused generic APIs **beyond** the slicer kinds in this spec.
 
 Also update README layer table and Architecture Constraints in the
-constitution to mention `core/components/`.
+constitution to mention `core/components/` (same P1 change).
 
 ## Complexity Tracking
 
@@ -445,13 +495,17 @@ constitution to mention `core/components/`.
 - Tests click `dashboard.sub_unit_dropdown` and `dashboard.option(..., "SubUnit")`
   directly — aliases and the two-arg `option` signature are mandatory.
 - Settle hook is easy to get wrong: if Layer 2 still clicks
-  `total_vehicles_kpi`, leakage audit fails even if tests pass.
+  `total_vehicles_kpi`, P9 leakage audit fails even if tests pass. Wire
+  settle in P2 so P4 select cannot hardcode fleet KPI names.
+- Do not extract methods in P3+ until P2 definitions exist; otherwise
+  `Slicer.select` has no opaque ids or kinds to read.
 - Moving search before clear-all can break `reset_dashboard_filters` mid-
-  sequence; keep reset as a fleet orchestrator until both delegates exist.
+  sequence; keep reset as a fleet orchestrator until both delegates exist
+  (P6 after P5).
 - `FILTER_SECTIONS` in the test helper is domain mapping — do not "clean it
-  up" into `core/`.
-- Checkbox API without a caller is allowed; do not change fleet dropdowns
-  to checkboxes to "use" it.
+  up" into `core/` in P7.
+- Checkbox API without a caller is allowed (P8); do not change fleet
+  dropdowns to checkboxes to "use" it.
 
 ## Out of Scope
 
