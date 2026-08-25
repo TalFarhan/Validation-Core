@@ -49,3 +49,9 @@ def test_all_charts_visible_on_load(dashboard):
 def test_vehicle_table_visible_on_load(dashboard):
     """The vehicle table must be visible on initial load."""
     expect(dashboard.vehicle_table).to_be_visible(timeout=dashboard.timeout)
+
+
+@pytest.mark.sanity
+def test_dashboard_updated_within_24_hours(dashboard):
+    """Last-refresh caption on the open report must be within 24 hours."""
+    dashboard.verify_freshness()

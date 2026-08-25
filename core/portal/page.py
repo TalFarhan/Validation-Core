@@ -2,6 +2,7 @@
 
 import re
 import time
+from datetime import datetime, timedelta
 
 import allure
 from playwright.sync_api import Locator, Page, expect
@@ -11,6 +12,52 @@ from config.settings import settings
 from pages.base_page import BasePage
 from pages.errors import LoadTimeoutError
 from reports.test_run_report import get_current_report
+
+
+_LAST_REFRESH_PHRASE = "הדשבורד עודכן לאחרונה ב:"
+_LAST_REFRESH_PATTERN = re.compile(
+    re.escape(_LAST_REFRESH_PHRASE) + r"\s*(.+)"
+)
+_LAST_REFRESH_DATETIME_TOKEN = re.compile(
+    r"(\d{1,4}[./-]\d{1,2}[./-]\d{1,4}"
+    r"(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)?)"
+)
+_LAST_REFRESH_FORMATS = (
+    "%d/%m/%Y %H:%M:%S",
+    "%d/%m/%Y %H:%M",
+    "%d/%m/%Y %I:%M:%S %p",
+    "%d/%m/%Y %I:%M %p",
+    "%m/%d/%Y %H:%M:%S",
+    "%m/%d/%Y %H:%M",
+    "%m/%d/%Y %I:%M:%S %p",
+    "%m/%d/%Y %I:%M %p",
+    "%d.%m.%Y %H:%M:%S",
+    "%d.%m.%Y %H:%M",
+    "%Y-%m-%d %H:%M:%S",
+    "%Y-%m-%dT%H:%M:%S",
+    "%d/%m/%Y",
+    "%m/%d/%Y",
+    "%Y-%m-%d",
+)
+
+
+def _parse_last_refresh_datetime(raw: str) -> datetime | None:
+    """Parse a last-refresh timestamp from captured caption text."""
+    candidate = re.sub(r"\s+", " ", (raw or "").strip())
+    if not candidate:
+        return None
+    token_match = _LAST_REFRESH_DATETIME_TOKEN.search(candidate)
+    snippets = [candidate]
+    if token_match:
+        snippets.insert(0, token_match.group(1))
+    for snippet in snippets:
+        text = snippet.strip(" .,-;")
+        for fmt in _LAST_REFRESH_FORMATS:
+            try:
+                return datetime.strptime(text, fmt)
+            except ValueError:
+                continue
+    return None
 
 
 class ReportShell(BasePage):
@@ -51,6 +98,46 @@ class ReportShell(BasePage):
 
     def _dashboard_iframe(self):
         return self.page.locator("main iframe").or_(self.page.locator("iframe")).first
+
+    def _report_frame(self):
+        """FrameLocator for the hosted Power BI report (same iframe as wait)."""
+        frame = self._dashboard_iframe().content_frame
+        if frame is not None:
+            return frame
+        try:
+            if self.page.locator("main iframe").count() > 0:
+                return self.page.frame_locator("main iframe")
+        except Exception:
+            pass
+        return self.page.frame_locator("iframe")
+
+    def _last_refresh_caption_text(self) -> str:
+        """Visible last-refresh caption text inside the report iframe."""
+        frame = self._report_frame()
+        caption = frame.get_by_text(re.compile(re.escape(_LAST_REFRESH_PHRASE))).first
+        try:
+            expect(caption).to_be_visible(timeout=self.timeout)
+        except AssertionError as exc:
+            raise AssertionError(
+                "Last-refresh caption "
+                f"{_LAST_REFRESH_PHRASE!r} was not found in the report iframe. "
+                f"{self._page_debug_summary()}"
+            ) from exc
+
+        chunks: list[str] = []
+        try:
+            chunks.append(caption.inner_text(timeout=self.timeout) or "")
+        except Exception:
+            pass
+        try:
+            chunks.append(caption.locator("xpath=..").inner_text(timeout=3000) or "")
+        except Exception:
+            pass
+        try:
+            chunks.append(frame.locator("body").inner_text(timeout=3000) or "")
+        except Exception:
+            pass
+        return "\n".join(chunk for chunk in chunks if chunk)
 
     def _click_even_if_hidden(self, locator) -> None:
         """Click controls that exist in DOM but are visually hidden/covered."""
@@ -438,4 +525,37 @@ class ReportShell(BasePage):
         raise LoadTimeoutError(
             "report ready visual after reload",
             steps_ms=[elapsed_ms],
+        )
+
+    @allure.step("Verify report last-refresh freshness")
+    def verify_freshness(self, max_hours: int = 24) -> None:
+        """Assert the report last-refresh caption is within ``max_hours``.
+
+        Locates generic Power BI chrome containing
+        ``הדשבורד עודכן לאחרונה ב:`` inside the report iframe (text/regex,
+        not dashboard-specific CSS), parses the timestamp, and asserts
+        ``datetime.now() - parsed <= max_hours``.
+        """
+        if not self._wait_for_dashboard_iframe():
+            raise AssertionError(
+                "Report iframe was not visible before last-refresh check. "
+                f"{self._page_debug_summary()}"
+            )
+
+        captured = self._last_refresh_caption_text()
+        match = _LAST_REFRESH_PATTERN.search(captured)
+        remainder = match.group(1).strip() if match else captured
+        parsed = _parse_last_refresh_datetime(remainder)
+        if parsed is None:
+            raise AssertionError(
+                "Last-refresh timestamp could not be parsed from caption "
+                f"{_LAST_REFRESH_PHRASE!r}. Captured text: {captured!r}"
+            )
+
+        now = datetime.now()
+        age = now - parsed
+        limit = timedelta(hours=max_hours)
+        assert age <= limit, (
+            f"Report last-refresh is older than {max_hours} hours: "
+            f"parsed={parsed.isoformat()}, age={age}, now={now.isoformat()}."
         )

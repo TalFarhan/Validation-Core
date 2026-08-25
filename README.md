@@ -110,7 +110,7 @@ allure serve test-results/allure-results
 
 ```
 config/settings.py          # הגדרות מ-.env
-core/portal/                # Layer 0 — ReportShell (SSO, קטלוג, iframe, timeouts)
+core/portal/                # Layer 0 — ReportShell (SSO, קטלוג, iframe, timeouts, last-refresh)
 core/components/            # Layer 2 — Slicer גנרי (dropdown / checkbox / search / clear)
 db/                         # לקוח SQL לקריאה בלבד
 pages/fleet_dashboard/      # Page Object של דשבורד הצי (ירושה/הרכבה של ReportShell)
@@ -129,7 +129,7 @@ docs/COVERAGE_CATALOG.md    # קטלוג KPI ↔ DB ↔ טסטים
 
 | שכבה | מיקום | מה מותר |
 |------|--------|---------|
-| Layer 0 | `core/portal/` (`ReportShell`) | התחברות/SSO, חיפוש קטלוג, המתנה ל-iframe, timeout לטעינת ויזואל |
+| Layer 0 | `core/portal/` (`ReportShell`) | התחברות/SSO, חיפוש קטלוג, המתנה ל-iframe, timeout לטעינת ויזואל, בדיקת עדכניות אחרונה |
 | Layer 1 / Domain | `pages/<report>/` | KPI, שמות פילטרים של הדוח, טאבים, טבלאות, גרפים — לדוגמה צי (`vehicles`, `district`) |
 | Layer 2 | `core/components/` (`Slicer`) | אינטראקציה גנרית עם סלייסר Power BI (dropdown, checkbox, search, clear-all) |
 | Layer 3 | `data/filters.json`, `data/filter_matrix.json` | קטלוג ערכים ומטריצת תרחישים (מה לבחור). `core/` לא טוען את הקבצים |

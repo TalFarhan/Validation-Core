@@ -1,17 +1,18 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR)
+- Version change: 1.1.0 → 1.2.0 (MINOR)
 - Modified principles:
-  - I. Layered Portal Architecture — Layer 2 slicer composition
-  - VII. Extract Shared Behavior Only — authorize report-agnostic slicer chrome
+  - I. Layered Portal Architecture — Layer 0 last-refresh verification
+  - II. Zero Domain Leakage — last-refresh caption is generic chrome
+  - VII. Extract Shared Behavior Only — authorize last-refresh chrome on Layer 0
 - Added sections: none
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md (Extract shared / Layer 2)
-  - ✅ .specify/templates/spec-template.md (Layer 2 architectural constraint)
-  - ✅ .specify/templates/tasks-template.md (core/components path)
-  - ✅ README.md (Layer 2 / Layer 3 table)
-- Follow-up TODOs: none. Strangler Fig method-moves are US1+ in
-  specs/002-generic-slicer/tasks.md, not this amendment.
+  - ✅ .specify/templates/plan-template.md (Layer 0 last-refresh in gates)
+  - ✅ .specify/templates/spec-template.md (last-refresh AC)
+  - ✅ .specify/templates/tasks-template.md (Layer 0 freshness in scope)
+  - ✅ README.md (Layer 0 table)
+- Follow-up TODOs: none. Method + smoke test live in
+  specs/003-dashboard-freshness/tasks.md.
 -->
 
 # Validation Core Constitution
@@ -21,9 +22,10 @@ Sync Impact Report
 ### I. Layered Portal Architecture
 Shared Power BI portal behavior MUST live in Layer 0 (`core/portal`).
 `ReportShell` in `core/portal/page.py` is the generic host for login/SSO,
-catalog search, iframe waiting, and visual-loading timeouts. Domain report
-pages (today: `MainDashboardPage` in `pages/fleet_dashboard/`) MUST inherit
-from or compose `ReportShell` instead of re-implementing those steps.
+catalog search, iframe waiting, visual-loading timeouts, and last-refresh
+verification. Domain report pages (today: `MainDashboardPage` in
+`pages/fleet_dashboard/`) MUST inherit from or compose `ReportShell`
+instead of re-implementing those steps.
 A new report MUST reuse Layer 0 rather than copy portal navigation.
 
 Shared Power BI slicer *interaction* (dropdown, checkbox, search, clear-all)
@@ -42,7 +44,10 @@ or flows, including vehicles, district, subunit, fleet KPI titles, chart
 titles, slicer display names, or other labels unique to one report.
 Configuration values (portal URL, catalog URL, search term, timeouts)
 MAY be read from settings. Generic Power BI chrome phrases (clear all
-slicers, Search placeholders) MAY live in Layer 2. Report-ready state and
+slicers, Search placeholders) MAY live in Layer 2. The standard last-refresh
+caption (`הדשבורד עודכן לאחרונה ב:`) MAY live in Layer 0 as generic chrome
+and MUST be located by text or regex inside the report iframe — never by
+report-specific CSS or visual ids. Report-ready state and
 post-select settle MUST be supplied by the domain page via a locator,
 predicate, or hook — never hardcoded to a fleet visual such as
 `total_vehicles_kpi`.
@@ -67,7 +72,8 @@ in test bodies (shared helpers MAY wrap page-object calls). Playwright
 locators for a report MUST live in that report's page object. Shared
 session and timeout utilities stay in `browser_session` and `BasePage`.
 Once `ReportShell` exists, a domain page MUST NOT re-implement login,
-catalog search, iframe wait, or visual-load timeout.
+catalog search, iframe wait, visual-load timeout, or last-refresh
+verification.
 
 Rationale: Locators and wait policy belong in one place so tests stay
 stable when Power BI chrome changes.
@@ -95,7 +101,7 @@ audit trail, not pytest stdout.
 Abstractions MUST earn their place.
 
 Layer 0 (`core/portal`) MUST extract only login/SSO, catalog search, iframe
-waiting, and visual-loading timeouts.
+waiting, visual-loading timeouts, and generic last-refresh verification.
 
 Layer 2 (`core/components/`) MAY extract Power BI slicer interaction
 (dropdown, checkbox, search, clear-all) when it is report-agnostic. Domain
@@ -105,7 +111,8 @@ page and in `data/`. `core/` MUST NOT load those files.
 KPI cards, tabs, tables, charts, tooltips, and drilldown MUST stay on the
 domain page until a second report requires the same behavior.
 
-Do not invent unused generic APIs beyond the slicer kinds authorized here.
+Do not invent unused generic APIs beyond the slicer kinds and last-refresh
+verification authorized here.
 
 Rationale: Premature generalization of fleet UX recreates the monolith
 under a new name. Slicer chrome is shared Power BI behavior; fleet labels
@@ -154,8 +161,9 @@ Versioning:
 
 Compliance review: pull requests and `/speckit-plan` Constitution Checks
 MUST verify layering, zero leakage, and the smoke-test contract. Complexity
-beyond Layer 0 portal steps or Layer 2 slicer chrome MUST be justified in
+beyond Layer 0 portal steps (including last-refresh verification) or
+Layer 2 slicer chrome MUST be justified in
 the plan's Complexity Tracking table. Runtime guidance lives in `README.md`
 and `docs/COVERAGE_CATALOG.md`.
 
-**Version**: 1.1.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-24
+**Version**: 1.2.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-25

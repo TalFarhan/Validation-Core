@@ -113,8 +113,12 @@
 
 - **AC-001**: Layer 0 (`core/portal`) MUST remain report-agnostic. It MUST NOT
   contain vehicles, district, fleet KPI/chart titles, or other report-specific labels.
+  Generic last-refresh chrome (`הדשבורד עודכן לאחרונה ב:`) MAY live in Layer 0
+  and MUST be located by regex or text inside the report iframe, never by
+  dashboard-specific CSS or visual ids.
 - **AC-002**: Domain page objects MUST inherit or compose `ReportShell` rather
-  than re-implement login, catalog search, iframe wait, or visual-load timeout.
+  than re-implement login, catalog search, iframe wait, visual-load timeout,
+  or last-refresh verification.
 - **AC-003**: Report-ready state MUST be supplied by the domain page (locator,
   predicate, or override), never hardcoded in `ReportShell`.
 - **AC-004**: Public test-facing page-object APIs MUST keep their contracts

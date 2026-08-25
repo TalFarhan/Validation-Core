@@ -76,7 +76,8 @@ Examples of foundational tasks (adjust based on your project):
 - [ ] T008 Configure error handling and logging infrastructure
 - [ ] T009 Setup environment configuration management
 - [ ] T00A Create or extend Layer 0 `ReportShell` in `core/portal/page.py`
-  (login, catalog search, iframe wait, visual-load timeout only)
+  (login, catalog search, iframe wait, visual-load timeout, last-refresh
+  verification)
 - [ ] T00B Refactor the domain page to inherit or compose `ReportShell`
   without leaking vehicles/district/KPI titles into `core/`
 

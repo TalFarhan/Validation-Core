@@ -40,15 +40,18 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-- **Layered portal**: Shared portal/SSO/iframe/timeout logic lives in Layer 0
-  (`core/portal`). Domain pages MUST inherit or compose `ReportShell`.
-  Shared slicer chrome MAY live in Layer 2 (`core/components/`).
+- **Layered portal**: Shared portal/SSO/iframe/timeout/last-refresh logic
+  lives in Layer 0 (`core/portal`). Domain pages MUST inherit or compose
+  `ReportShell`. Shared slicer chrome MAY live in Layer 2 (`core/components/`).
 - **Zero domain leakage**: `core/` MUST NOT reference vehicles, district,
   fleet KPI titles, slicers, chart titles, or other report-specific labels.
   Report-ready state MUST be a domain locator, predicate, or override.
+  Generic last-refresh chrome MAY live in Layer 0 and MUST use text/regex
+  inside the report iframe, never dashboard-specific CSS.
 - **Test contract**: After Layer 0, Layer 2, or page-object navigation changes, fleet
   smoke tests (`tests/ui/fleet_dashboard/`) MUST pass at 100% via `pytest`.
-- **Extract shared only**: Power BI slicer chrome MAY live in Layer 2
+- **Extract shared only**: Generic last-refresh verification MAY live in
+  Layer 0. Power BI slicer chrome MAY live in Layer 2
   (`core/components/`). Do not genericize KPI cards, tabs, charts, tables,
   or drilldown until a second report requires them. Domain filter names
   and catalogs stay outside `core/`.
