@@ -74,7 +74,7 @@ No `NEEDS CLARIFICATION` markers remain.
 
 - **Decision**: `_report_ready_locator()` returns
   `self._report_frame().get_by_text("<phrase>").first` for
-  `אוכלוסייה מותרעת` and `כמות אוכלוסיה ברשויות` respectively.
+  `לקוחות חיוניים מופסקים` and `ממוצע הוצאות לקנייה בשגרה` respectively.
 - **Rationale**: Spec FR-001 / FR-002 / AC-003. Matches fleet's
   text-based ready KPI, using Layer 0 `_report_frame()` instead of a
   page-owned `frame_locator` duplicate.

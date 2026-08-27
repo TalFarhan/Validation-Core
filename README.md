@@ -70,14 +70,14 @@ Markers מוגדרים ב-`pytest.ini`: `sanity`, `data`, `regression`.
 
 ## דוחות וארטיפקטים
 
-אחרי כל הרצה נוצרים תחת `test-results/` (gitignored):
+אחרי כל הרצה נוצרים תחת `results/` (gitignored):
 
 | פלט | נתיב | למי שימושי |
 |-----|------|------------|
-| HTML | `test-results/report.html` | מפתחים / QA |
-| CSV בעברית (שלבים UI+SQL) | `test-results/run-reports/run_*.csv` | BI / ניתוח כשלים |
-| Allure raw | `test-results/allure-results/` | `allure serve test-results/allure-results` |
-| צילומי מסך + Playwright trace | `test-results/screenshots/`, traces ב-Allure | דיבוג כשל |
+| HTML | `results/report.html` | מפתחים / QA |
+| CSV בעברית (שלבים UI+SQL) | `results/run-reports/run_*.csv` | BI / ניתוח כשלים |
+| Allure raw | `results/allure-results/` | `allure serve results/allure-results` |
+| צילומי מסך + Playwright trace | `results/screenshots/`, traces ב-Allure | דיבוג כשל |
 
 ה-CSV הוא הדוח העסקי העיקרי: פעולה, שאילתה, פלט, סטטוס עבר/נכשל.  
 ב-Allure מצורף `validation-steps.csv` לכל טסט (שלבים של אותה בדיקה). נתיב ה-CSV המלא של הריצה נרשם ב-`environment.properties` בתוך `allure-results`.
@@ -91,7 +91,7 @@ Markers מוגדרים ב-`pytest.ini`: `sanity`, `data`, `regression`.
 # scoop install allure
 # או: choco install allure-commandline
 
-allure serve test-results/allure-results
+allure serve results/allure-results
 ```
 
 בדוח תראו:

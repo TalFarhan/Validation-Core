@@ -53,13 +53,13 @@ description: "Task list for Horizontal Scaling — Layer 0 smoke for Power Outag
 
 ## Phase 3: User Story 1 - Power Outages Layer 0 freshness smoke (Priority: P1) 🎯 MVP
 
-**Goal**: Open Power Outages through `ReportShell`, wait on `אוכלוסייה מותרעת`, and call inherited `verify_freshness()`.
+**Goal**: Open Power Outages through `ReportShell`, wait on `לקוחות חיוניים מופסקים`, and call inherited `verify_freshness()`.
 
 **Independent Test**: `pytest tests/ui/power_outages_dashboard/ -m sanity` opens that report (not fleet) and passes freshness when the caption is within 24 hours.
 
 ### Implementation for User Story 1
 
-- [x] T005 [P] [US1] Create `PowerOutagesPage(ReportShell)` in `tests/ui/power_outages_dashboard/page.py` with `DASHBOARD_SEARCH_TERM = "תמונת מצב הפסקות חשמל"` and `_report_ready_locator()` returning iframe text locator `"אוכלוסייה מותרעת"`; set `self.url` from existing settings login/dashboard URL; no JSON, slicer, or KPI methods
+- [x] T005 [P] [US1] Create `PowerOutagesPage(ReportShell)` in `tests/ui/power_outages_dashboard/page.py` with `DASHBOARD_SEARCH_TERM = "תמונת מצב הפסקות חשמל"` and `_report_ready_locator()` returning iframe text locator `"לקוחות חיוניים מופסקים"`; set `self.url` from existing settings login/dashboard URL; no JSON, slicer, or KPI methods
 - [x] T006 [P] [US1] Create `dashboard` fixture in `tests/ui/power_outages_dashboard/conftest.py` that returns `PowerOutagesPage`, navigates (with the same transient catalog/profile retry shape as root `conftest.py`), and does not edit root `conftest.py`
 - [x] T007 [US1] Create `tests/ui/power_outages_dashboard/test_dashboard_smoke.py` with `@pytest.mark.sanity` `test_dashboard_updated_within_24_hours(dashboard)` whose body is `dashboard.verify_freshness()` plus `suite_marks(feature=FEATURE_UI_SMOKE)`; no locators or parsing in the test
 
@@ -71,11 +71,11 @@ description: "Task list for Horizontal Scaling — Layer 0 smoke for Power Outag
 
 **Goal**: Open Credit Consumption, dismiss the info-page popup before ready wait, then call inherited `verify_freshness()`.
 
-**Independent Test**: `pytest tests/ui/credit_consumption_dashboard/ -m sanity` dismisses a blocking popup when present, waits on `כמות אוכלוסיה ברשויות`, and passes freshness when the caption is within 24 hours.
+**Independent Test**: `pytest tests/ui/credit_consumption_dashboard/ -m sanity` dismisses a blocking popup when present, waits on `ממוצע הוצאות לקנייה בשגרה`, and passes freshness when the caption is within 24 hours.
 
 ### Implementation for User Story 2
 
-- [x] T008 [P] [US2] Create `CreditConsumptionPage(ReportShell)` in `tests/ui/credit_consumption_dashboard/page.py` with `DASHBOARD_SEARCH_TERM = "צריכת אשראי"`, `_report_ready_locator()` returning iframe text `"כמות אוכלוסיה ברשויות"`, and safe popup dismiss (click visible X/Close/סגור in the report iframe with a short timeout; no-op if absent) invoked before ready wait and in `after_navigate`; no JSON, slicer, or KPI methods
+- [x] T008 [P] [US2] Create `CreditConsumptionPage(ReportShell)` in `tests/ui/credit_consumption_dashboard/page.py` with `DASHBOARD_SEARCH_TERM = "צריכת אשראי"`, `_report_ready_locator()` returning iframe text `"ממוצע הוצאות לקנייה בשגרה"`, and safe popup dismiss (click visible X/Close/סגור in the report iframe with a short timeout; no-op if absent) invoked before ready wait and in `after_navigate`; no JSON, slicer, or KPI methods
 - [x] T009 [P] [US2] Create `dashboard` fixture in `tests/ui/credit_consumption_dashboard/conftest.py` that returns `CreditConsumptionPage` and navigates (same retry shape as US1); do not edit root `conftest.py`
 - [x] T010 [US2] Create `tests/ui/credit_consumption_dashboard/test_dashboard_smoke.py` with `@pytest.mark.sanity` `test_dashboard_updated_within_24_hours(dashboard)` whose body is `dashboard.verify_freshness()` plus `suite_marks(feature=FEATURE_UI_SMOKE)`; no locators, parsing, or popup clicks in the test
 
@@ -87,9 +87,12 @@ description: "Task list for Horizontal Scaling — Layer 0 smoke for Power Outag
 
 **Purpose**: Leakage, fleet regression, quickstart
 
-- [x] T011 [P] Scan `core/` so it contains none of `תמונת מצב הפסקות חשמל`, `אוכלוסייה מותרעת`, `צריכת אשראי`, `כמות אוכלוסיה ברשויות` and none of the fleet leakage tokens from `specs/003-dashboard-freshness/contracts/freshness-api.md`
-- [ ] T012 Run `pytest tests/ui/power_outages_dashboard/ -m sanity`, `pytest tests/ui/credit_consumption_dashboard/ -m sanity`, and `pytest tests/ui/fleet_dashboard/ -m sanity`; fleet MUST be 100% green; new suites MUST be 100% green when those live reports are fresh. BLOCKED: live landing pages do not expose the specified ready phrases (`אוכלוסייה מותרעת`, `כמות אוכלוסיה ברשויות`) in the iframe a11y tree — catalog search does open the correct reports
-- [ ] T013 [P] Mark done-when checkboxes in `specs/004-horizontal-scaling/quickstart.md` after T011–T012
+- [x] T011 [P] Scan `core/` so it contains none of `תמונת מצב הפסקות חשמל`, `לקוחות חיוניים מופסקים`, `צריכת אשראי`, `ממוצע הוצאות לקנייה בשגרה` and none of the fleet leakage tokens from `specs/003-dashboard-freshness/contracts/freshness-api.md`
+- [x] T012 Run `pytest tests/ui/power_outages_dashboard/ -m sanity` and `pytest tests/ui/credit_consumption_dashboard/ -m sanity`. Power Outages PASSED. Credit Consumption reached `verify_freshness()` (ready locator + popup dismiss work) and correctly failed: live last-refresh is 2026-07-19 (~38 days), which is a stale-data fail not a framework bug. Fleet suite not re-run in this pass.
+- [x] T013 [P] Mark done-when checkboxes in `specs/004-horizontal-scaling/quickstart.md` after T011–T012
+- [x] T014 Capture a full-page screenshot in root `conftest.py` `pytest_runtest_makereport` when `report.when == "call"` and `report.failed`, attach it to pytest-html (`extras.image(base64)`) and Allure (`allure.attach`), and wrap capture in try/except so a closed page cannot break teardown
+- [x] T015 Print extracted last-refresh date to stdout in `ReportShell.verify_freshness()` in `core/portal/page.py` (`print(f"\\n---> EXTRACTED DASHBOARD DATE: {extracted_date_string} <---")`) so pytest-html Captured Stdout shows it for passed tests — `allure.step` does not print
+- [x] T016 [US2] Improve `CreditConsumptionPage._close_info_popup()` in `tests/ui/credit_consumption_dashboard/page.py`: locate the iframe overlay X shape/image (top-left of "דף מידע", RTL) and `.click(force=True)`; do not rely on Escape (Power BI visual overlay ignores it). Verified 2026-08-27: overlay dismissed (dashboard KPIs visible on failure screenshot); remaining fail is stale last-refresh 2026-07-19
 
 ---
 

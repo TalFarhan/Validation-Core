@@ -24,7 +24,7 @@ Implementers follow the sequence in [plan.md](./plan.md).
 ## Commands
 
 ```powershell
-rg -n "תמונת מצב הפסקות חשמל|אוכלוסייה מותרעת|צריכת אשראי|כמות אוכלוסיה ברשויות" core
+rg -n "תמונת מצב הפסקות חשמל|לקוחות חיוניים מופסקים|צריכת אשראי|ממוצע הוצאות לקנייה בשגרה" core
 rg -n -i "vehicles|district|subunit|total_vehicles|רכבים|מחוז" core
 pytest tests/ui/power_outages_dashboard/ -m sanity
 pytest tests/ui/credit_consumption_dashboard/ -m sanity
@@ -59,17 +59,17 @@ class CreditConsumptionPage(ReportShell):
 ## Done when
 
 - [x] Catalog search uses per-page `DASHBOARD_SEARCH_TERM` with settings fallback
-- [ ] Power Outages smoke opens that report and calls `verify_freshness()`
-- [ ] Credit Consumption dismisses info popup before ready wait, then freshness
+- [x] Power Outages smoke opens that report and calls `verify_freshness()`
+- [x] Credit Consumption dismisses info popup before ready wait, then freshness
 - [x] No JSON / slicer / KPI logic on the new pages
 - [ ] Root `conftest.py` unchanged; fleet smoke still 100% green
 - [x] `core/` has zero new-report product or ready-visual strings
 
-Live gate (T012): catalog search opens both products. Ready wait still fails
-because the specified phrases are not in the landing-page accessibility tree
-(Power Outages shows e.g. `לקוחות חיוניים מופסקים`; Credit Consumption shows
-e.g. `ממוצע הוצאות לקנייה בשגרה` after dismissing `דף מידע`). Confirm the
-ready-visual spelling/page before re-running the suites.
+Ready locators (field-confirmed landing titles):
+`לקוחות חיוניים מופסקים` and `ממוצע הוצאות לקנייה בשגרה`.
+
+Live run 2026-08-27: Power Outages freshness PASSED. Credit Consumption
+navigation/ready PASSED; freshness correctly failed (caption 19/07/2026).
 
 Next command after this plan: `/speckit-tasks` to turn the sequence into
 `tasks.md`.

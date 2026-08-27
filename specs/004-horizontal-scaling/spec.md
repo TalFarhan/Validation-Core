@@ -47,7 +47,7 @@ report's last-refresh caption is within 24 hours.
 1. **Given** an authenticated portal session, **When** the Power Outages
    smoke suite starts, **Then** the local dashboard fixture opens the Power
    Outages report via catalog search for `תמונת מצב הפסקות חשמל` and waits
-   until the ready visual `אוכלוסייה מותרעת` is visible.
+   until the ready visual `לקוחות חיוניים מופסקים` is visible.
 2. **Given** the Power Outages report is open and ready, **When**
    `test_dashboard_updated_within_24_hours` runs, **Then** it calls
    `dashboard.verify_freshness()` and passes if last-refresh is within 24
@@ -92,7 +92,7 @@ appears, waits for the authorities-population ready visual, and passes
    navigation continues, **Then** the suite does not fail on a missing
    close button; it proceeds to the ready visual.
 4. **Given** the popup is dismissed, **When** the page waits for ready,
-   **Then** the ready visual `כמות אוכלוסיה ברשויות` becomes visible.
+   **Then** the ready visual `ממוצע הוצאות לקנייה בשגרה` becomes visible.
 5. **Given** the Credit Consumption report is open and ready, **When**
    `test_dashboard_updated_within_24_hours` runs, **Then** it calls
    `dashboard.verify_freshness()` and passes if last-refresh is within 24
@@ -131,11 +131,11 @@ appears, waits for the authorities-population ready visual, and passes
 
 - **FR-001**: The framework MUST add a Power Outages Layer 0 page that
   inherits `ReportShell`, sets catalog search term
-  `תמונת מצב הפסקות חשמל`, and treats `אוכלוסייה מותרעת` as the
+  `תמונת מצב הפסקות חשמל`, and treats `לקוחות חיוניים מופסקים` as the
   report-ready visual.
 - **FR-002**: The framework MUST add a Credit Consumption Layer 0 page that
   inherits `ReportShell`, sets catalog search term `צריכת אשראי`, and
-  treats `כמות אוכלוסיה ברשויות` as the report-ready visual.
+  treats `ממוצע הוצאות לקנייה בשגרה` as the report-ready visual.
 - **FR-003**: Each new report MUST have its own smoke package with a
   `dashboard` fixture that returns that report's page object and a sanity
   test `test_dashboard_updated_within_24_hours(dashboard)` that calls
@@ -168,9 +168,9 @@ appears, waits for the authorities-population ready visual, and passes
 ### Key Entities
 
 - **Power Outages report**: Portal catalog product searched as
-  `תמונת מצב הפסקות חשמל`. Ready when `אוכלוסייה מותרעת` is visible.
+  `תמונת מצב הפסקות חשמל`. Ready when `לקוחות חיוניים מופסקים` is visible.
 - **Credit Consumption report**: Portal catalog product searched as
-  `צריכת אשראי`. Ready when `כמות אוכלוסיה ברשויות` is visible after any
+  `צריכת אשראי`. Ready when `ממוצע הוצאות לקנייה בשגרה` is visible after any
   info-page popup is dismissed.
 - **Info-page popup**: Credit Consumption overlay that blocks the main
   report until the tester (or page object) closes it via X / close.
@@ -215,12 +215,12 @@ ReportShell (Layer 0)
 
 PowerOutagesPage(ReportShell)
   DASHBOARD_SEARCH_TERM = "תמונת מצב הפסקות חשמל"
-  ready = "אוכלוסייה מותרעת"
+  ready = "לקוחות חיוניים מופסקים"
 
 CreditConsumptionPage(ReportShell)
   DASHBOARD_SEARCH_TERM = "צריכת אשראי"
   dismiss info-page popup (X) before ready wait
-  ready = "כמות אוכלוסיה ברשויות"
+  ready = "ממוצע הוצאות לקנייה בשגרה"
 
 tests/ui/<report>/conftest.py
   dashboard fixture → that page, navigate()
@@ -255,9 +255,9 @@ tests/ui/<report>/test_dashboard_smoke.py
 - Both products exist in the same Agamim portal catalog used by fleet.
 - Search terms `תמונת מצב הפסקות חשמל` and `צריכת אשראי` uniquely identify
   the intended catalog items for this environment.
-- Ready visuals `אוכלוסייה מותרעת` and `כמות אוכלוסיה ברשויות` are stable
-  Hebrew labels on those reports (spelling as provided, including
-  `אוכלוסיה` without י on Credit Consumption).
+- Ready visuals `לקוחות חיוניים מופסקים` and `ממוצע הוצאות לקנייה בשגרה` are
+  the landing-page titles observed on the live reports (updated after
+  field feedback).
 - The Credit Consumption info page is a dismissible overlay with a close
   control (X / Close / סגור), not a separate portal route.
 - Shared Playwright session and auth file from the root fixture remain

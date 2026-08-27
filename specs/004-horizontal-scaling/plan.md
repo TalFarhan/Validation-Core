@@ -64,7 +64,7 @@ read on `ReportShell` (~5–15 lines).
   iframe/timeout/freshness stay in Layer 0. Per-page catalog term is
   configuration owned by the domain page.
 - **Zero domain leakage**: PASS — Power Outages / Credit Consumption
-  names, ready text (`אוכלוסייה מותרעת`, `כמות אוכלוסיה ברשויות`), and
+  names, ready text (`לקוחות חיוניים מופסקים`, `ממוצע הוצאות לקנייה בשגרה`), and
   popup close locators MUST NOT enter `core/`. Layer 0 only reads
   `DASHBOARD_SEARCH_TERM` from the instance/class when set.
 - **Test contract**: PASS — root `conftest.py` `dashboard` fixture and

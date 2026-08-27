@@ -89,7 +89,7 @@ Portal chrome is not a source of business truth.
 
 ### VI. Observability of Validation Runs
 Every test run MUST continue to emit HTML, Hebrew CSV, and Allure
-artifacts under `test-results/`. Navigation and authentication paths
+artifacts under `results/`. Navigation and authentication paths
 SHOULD keep Allure steps and CSV UI log lines. Failures MUST retain
 screenshot and Playwright trace attachments. Layer 0 extraction MUST NOT
 drop existing run evidence.

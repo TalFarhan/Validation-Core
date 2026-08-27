@@ -15,7 +15,7 @@ optional popup, and the smoke caller.
 | Class | `PowerOutagesPage` | `CreditConsumptionPage` |
 | Base | `ReportShell` | `ReportShell` |
 | `DASHBOARD_SEARCH_TERM` | `תמונת מצב הפסקות חשמל` | `צריכת אשראי` |
-| Ready visual text | `אוכלוסייה מותרעת` | `כמות אוכלוסיה ברשויות` |
+| Ready visual text | `לקוחות חיוניים מופסקים` | `ממוצע הוצאות לקנייה בשגרה` |
 | Popup | none | info-page overlay with close / X |
 | JSON / slicers | forbidden | forbidden |
 
@@ -58,7 +58,7 @@ Layer 0 stores no product list. Each page owns one term.
 
 ```text
 [start]
-  → iframe + ready "אוכלוסייה מותרעת"?
+  → iframe + ready "לקוחות חיוניים מופסקים"?
        ├─ yes → after_navigate → done
        └─ no → portal catalog search (page term)
             → wait ready visual → after_navigate → done
@@ -70,7 +70,7 @@ Layer 0 stores no product list. Each page owns one term.
 [start]
   → iframe visible?
        └─ if info popup visible → click X (no-op if absent)
-  → ready "כמות אוכלוסיה ברשויות"?
+  → ready "ממוצע הוצאות לקנייה בשגרה"?
        ├─ yes → after_navigate (dismiss again if needed) → done
        └─ no → portal catalog search (page term)
             → dismiss popup if present

@@ -15,7 +15,7 @@ Fleet consumers of root `dashboard` / `navigate` /
 |------|--------|
 | File | `tests/ui/power_outages_dashboard/page.py` |
 | `DASHBOARD_SEARCH_TERM` | `"תמונת מצב הפסקות חשמל"` |
-| `_report_ready_locator()` | iframe text `"אוכלוסייה מותרעת"` |
+| `_report_ready_locator()` | iframe text `"לקוחות חיוניים מופסקים"` |
 | Freshness | inherited `verify_freshness` — no override |
 | Forbidden | JSON, `Slicer`, KPI/chart/table methods |
 
@@ -25,7 +25,7 @@ Fleet consumers of root `dashboard` / `navigate` /
 |------|--------|
 | File | `tests/ui/credit_consumption_dashboard/page.py` |
 | `DASHBOARD_SEARCH_TERM` | `"צריכת אשראי"` |
-| `_report_ready_locator()` | iframe text `"כמות אוכלוסיה ברשויות"` |
+| `_report_ready_locator()` | iframe text `"ממוצע הוצאות לקנייה בשגרה"` |
 | Popup | dismiss info-page close/X before ready wait; no-op if absent |
 | Freshness | inherited `verify_freshness` — no override |
 | Forbidden | JSON, `Slicer`, KPI/chart/table methods |
@@ -88,7 +88,7 @@ clicks — those belong on the page object.
 `core/**` MUST match none of:
 
 ```text
-תמונת מצב הפסקות חשמל|אוכלוסייה מותרעת|צריכת אשראי|כמות אוכלוסיה ברשויות
+תמונת מצב הפסקות חשמל|לקוחות חיוניים מופסקים|צריכת אשראי|ממוצע הוצאות לקנייה בשגרה
 ```
 
 and none of the existing fleet leakage tokens from 003

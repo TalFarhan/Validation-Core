@@ -14,4 +14,4 @@ class PowerOutagesPage(ReportShell):
         self.url = settings.LOGIN_URL or settings.DASHBOARD_URL
 
     def _report_ready_locator(self):
-        return self._iframe_phrase_locator("אוכלוסייה מותרעת")
+        return self._iframe_phrase_locator("לקוחות חיוניים מופסקים")

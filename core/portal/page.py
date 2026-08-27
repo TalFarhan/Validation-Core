@@ -594,6 +594,7 @@ class ReportShell(BasePage):
             )
 
         extracted_date_string = remainder.splitlines()[0].strip()
+        print(f"\n---> EXTRACTED DASHBOARD DATE: {extracted_date_string} <---")
         now = datetime.now()
         age = now - parsed
         limit = timedelta(hours=max_hours)

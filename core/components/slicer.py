@@ -172,7 +172,7 @@ class Slicer:
                 f"{definition.kind!r} for id {slicer_id!r}"
             )
         if not values:
-            return
+            return 
 
         self.close_open()
         self._call_settle("before_select")

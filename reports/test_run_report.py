@@ -11,8 +11,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-REPORT_DIR = Path("test-results/run-reports")
-ALLURE_RESULTS_DIR = Path("test-results/allure-results")
+RESULTS_DIR = Path("results")
+REPORT_DIR = RESULTS_DIR / "run-reports"
+ALLURE_RESULTS_DIR = RESULTS_DIR / "allure-results"
+SCREENSHOTS_DIR = RESULTS_DIR / "screenshots"
+TRACES_DIR = RESULTS_DIR / "traces"
+VIDEOS_DIR = RESULTS_DIR / "videos"
 
 _current_report: ContextVar[TestRunReport | None] = ContextVar(
     "current_test_run_report", default=None

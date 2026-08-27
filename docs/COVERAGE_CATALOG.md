@@ -144,4 +144,4 @@
 - [ ] טבלת FACT חדשה ל-KPI → `DB_WITHDRAWN_TABLE` / `DB_ALLOCATED_TABLE` + קטלוג
 - [ ] שינוי עמודת סיבת זיכוי / `TransferReason` → עדכון `count_by_withdrawal_reason` + טולטיפ/תוויות withdrawal
 - [ ] הרצת `pytest -m sanity` ואז `pytest -m regression` לפני מסירה
-- [ ] צירוף CSV מ-`test-results/run-reports/` לתיעוד הריצה
+- [ ] צירוף CSV מ-`results/run-reports/` לתיעוד הריצה

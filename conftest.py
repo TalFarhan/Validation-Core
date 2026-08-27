@@ -1,6 +1,5 @@
 import base64
 import json
-import os
 import re
 from datetime import datetime
 from pathlib import Path
@@ -18,7 +17,16 @@ from browser_session import ensure_single_tab, install_single_tab_policy
 from config.settings import settings
 from db.client import DatabaseClient
 from pages.fleet_dashboard.main_dashboard_page import MainDashboardPage
-from reports.test_run_report import RunReportBook, TestRunReport
+from reports.test_run_report import (
+    ALLURE_RESULTS_DIR,
+    REPORT_DIR,
+    RESULTS_DIR,
+    RunReportBook,
+    SCREENSHOTS_DIR,
+    TRACES_DIR,
+    TestRunReport,
+    VIDEOS_DIR,
+)
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 AUTH_PATH = Path(settings.AUTH_FILE)
@@ -42,29 +50,71 @@ def _test_failed(request) -> bool:
     return False
 
 
-def _attach_failure_artifacts(request, screenshot_path: str | None) -> None:
-    """Attach screenshot to pytest-html (base64) and Allure when a test fails."""
-    path = Path(screenshot_path) if screenshot_path else None
-    if path is None or not path.exists() or path.stat().st_size == 0:
-        return
+def _as_playwright_page(candidate):
+    """Return a Playwright Page (or None) from a fixture value or page object."""
+    if candidate is None:
+        return None
+    if callable(getattr(candidate, "screenshot", None)):
+        return candidate
+    inner = getattr(candidate, "page", None)
+    if inner is not None and callable(getattr(inner, "screenshot", None)):
+        return inner
+    return None
 
-    if html_extras is not None:
-        # Embed as base64 so report.html shows images even with --self-contained-html
-        # and regardless of relative path vs report location.
-        encoded = base64.b64encode(path.read_bytes()).decode("ascii")
-        for phase in ("call", "setup"):
-            rep = getattr(request.node, f"rep_{phase}", None)
-            if rep is not None and rep.failed:
-                extra = getattr(rep, "extras", [])
-                extra.append(html_extras.image(encoded, mime_type="image/png"))
-                rep.extras = extra
-                break
 
-    allure.attach.file(
-        str(path),
-        name="screenshot",
-        attachment_type=allure.attachment_type.PNG,
-    )
+def _active_playwright_page(item):
+    """Resolve the live Playwright page from the test's fixtures."""
+    funcargs = getattr(item, "funcargs", None) or {}
+    for key in ("auth_page", "session_page", "page", "dashboard"):
+        page = _as_playwright_page(funcargs.get(key))
+        if page is not None:
+            return page
+    return None
+
+
+def _attach_failure_screenshot(item, report) -> bool:
+    """Full-page screenshot on UI failure for pytest-html and Allure.
+
+    This framework does not use pytest-playwright's ``--screenshot`` CLI flag.
+    Capture here in ``pytest_runtest_makereport`` so extras land on the report
+    before HTML generation. Failures in capture must never break teardown.
+    """
+    if not (report.when == "call" and report.failed):
+        return False
+    if getattr(item, "_failure_screenshot_taken", False):
+        return True
+
+    page = _active_playwright_page(item)
+    if page is None:
+        return False
+
+    try:
+        screenshot_bytes = page.screenshot(full_page=True)
+        if not screenshot_bytes:
+            return False
+
+        SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+        screenshot_path = (
+            SCREENSHOTS_DIR
+            / f"{_safe_artifact_name(item.name)}_{_artifact_stamp()}_FAILED.png"
+        )
+        screenshot_path.write_bytes(screenshot_bytes)
+
+        base64_image = base64.b64encode(screenshot_bytes).decode("ascii")
+        if html_extras is not None:
+            extra = getattr(report, "extras", [])
+            extra.append(html_extras.image(base64_image))
+            report.extras = extra
+
+        allure.attach(
+            screenshot_bytes,
+            name="screenshot",
+            attachment_type=allure.attachment_type.PNG,
+        )
+        item._failure_screenshot_taken = True
+        return True
+    except Exception:
+        return False
 
 
 def save_auth_state(context) -> None:
@@ -138,9 +188,9 @@ def _save_session_video(video, dest: Path) -> Path | None:
 
 
 def pytest_configure(config):
-    Path("test-results").mkdir(parents=True, exist_ok=True)
-    Path("test-results/allure-results").mkdir(parents=True, exist_ok=True)
-    Path("test-results/run-reports").mkdir(parents=True, exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    ALLURE_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 
 @pytest.fixture(scope="session")
@@ -159,7 +209,7 @@ def video_run_dir(pytestconfig):
     if not _want_video(pytestconfig):
         yield None
         return
-    path = Path("test-results/videos") / f"run_{_artifact_stamp()}"
+    path = VIDEOS_DIR / f"run_{_artifact_stamp()}"
     path.mkdir(parents=True, exist_ok=True)
     yield path
 
@@ -287,19 +337,39 @@ def auth_page(session_page, browser_context, request):
 
     test_failed = _test_failed(request)
     if test_failed:
-        stamp = _artifact_stamp()
-        base_name = f"{_safe_artifact_name(request.node.name)}_{stamp}_FAILED"
-        os.makedirs("test-results/screenshots", exist_ok=True)
-        screenshot_path = f"test-results/screenshots/{base_name}.png"
-        try:
-            session_page.screenshot(path=screenshot_path, full_page=True)
-        except Exception:
-            screenshot_path = None
-        _attach_failure_artifacts(request, screenshot_path)
+        # Call-phase screenshots are taken in pytest_runtest_makereport.
+        # Setup-phase failures (e.g. navigate in a fixture) still need a shot here.
+        if not getattr(request.node, "_failure_screenshot_taken", False):
+            try:
+                SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+                stamp = _artifact_stamp()
+                base_name = f"{_safe_artifact_name(request.node.name)}_{stamp}_FAILED"
+                screenshot_bytes = session_page.screenshot(full_page=True)
+                screenshot_path = SCREENSHOTS_DIR / f"{base_name}.png"
+                screenshot_path.write_bytes(screenshot_bytes)
+                base64_image = base64.b64encode(screenshot_bytes).decode("ascii")
+                if html_extras is not None:
+                    for phase in ("setup", "call"):
+                        rep = getattr(request.node, f"rep_{phase}", None)
+                        if rep is not None and rep.failed:
+                            extra = getattr(rep, "extras", [])
+                            extra.append(html_extras.image(base64_image))
+                            rep.extras = extra
+                            break
+                allure.attach(
+                    screenshot_bytes,
+                    name="screenshot",
+                    attachment_type=allure.attachment_type.PNG,
+                )
+                request.node._failure_screenshot_taken = True
+            except Exception:
+                pass
 
         if tracing:
-            os.makedirs("test-results/traces", exist_ok=True)
-            trace_path = f"test-results/traces/{base_name}.zip"
+            stamp = _artifact_stamp()
+            base_name = f"{_safe_artifact_name(request.node.name)}_{stamp}_FAILED"
+            TRACES_DIR.mkdir(parents=True, exist_ok=True)
+            trace_path = str(TRACES_DIR / f"{base_name}.zip")
             _stop_tracing(browser_context, path=trace_path)
             if Path(trace_path).exists():
                 allure.attach.file(
@@ -349,5 +419,6 @@ def dashboard(auth_page, browser_context):
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
-    rep = outcome.get_result()
-    setattr(item, f"rep_{rep.when}", rep)
+    report = outcome.get_result()
+    setattr(item, f"rep_{report.when}", report)
+    _attach_failure_screenshot(item, report)
