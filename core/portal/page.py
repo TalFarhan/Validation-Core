@@ -76,6 +76,43 @@ class ReportShell(BasePage):
     def after_navigate(self) -> None:
         return
 
+    def before_report_ready_check(self) -> None:
+        """Domain hook: dismiss overlays that block the ready visual.
+
+        Called immediately before each ready-locator visibility check.
+        Default is a no-op so fleet behavior is unchanged.
+        """
+        return
+
+    def _iframe_phrase_locator(self, phrase: str) -> Locator:
+        """Locate a phrase in the report iframe by text or accessible name.
+
+        Power BI KPI/card titles are often images or buttons (aria-label /
+        alt), not text nodes. Role ``name`` is a plain string (substring
+        match). Do not ``or_`` locators from a nested FrameLocator — Playwright
+        rejects frame locators inside composite locators.
+        """
+        frame = self._report_frame()
+        return (
+            frame.get_by_text(phrase, exact=False)
+            .or_(frame.get_by_role("button", name=phrase))
+            .or_(frame.get_by_role("img", name=phrase))
+            .or_(frame.get_by_role("heading", name=phrase))
+            .or_(frame.get_by_role("group", name=phrase))
+            .or_(frame.get_by_label(phrase))
+            .or_(frame.get_by_alt_text(phrase, exact=False))
+            .or_(
+                frame.locator(
+                    f"[aria-label*='{phrase}'], [title*='{phrase}'], [alt*='{phrase}']"
+                )
+            )
+            .first
+        )
+
+    def _catalog_search_term(self) -> str:
+        """Catalog product name: page-owned term, else settings default."""
+        return getattr(self, "DASHBOARD_SEARCH_TERM", None) or settings.DASHBOARD_SEARCH_TERM
+
     def _portal_search_box(self):
         return (
             self.page.get_by_role("textbox", name=re.compile(r"חיפוש מוצר|חיפוש"))
@@ -287,7 +324,7 @@ class ReportShell(BasePage):
     def _open_dashboard_via_portal_search(self) -> None:
         self._open_all_products_catalog()
 
-        term = settings.DASHBOARD_SEARCH_TERM
+        term = self._catalog_search_term()
         print(f"\n[nav] מחפשים '{term}' בקטלוג...\n")
         search = self._portal_search_box()
         search.wait_for(state="visible", timeout=self.timeout)
@@ -416,6 +453,7 @@ class ReportShell(BasePage):
         """True when the report iframe and domain ready visual are present."""
         if not self._wait_for_dashboard_iframe(timeout=3000):
             return False
+        self.before_report_ready_check()
         try:
             expect(self._report_ready_locator()).to_be_visible(timeout=5000)
             return True
@@ -466,6 +504,7 @@ class ReportShell(BasePage):
         ready = self._report_ready_locator()
         ready_deadline = time.monotonic() + self.timeout / 1000
         while time.monotonic() < ready_deadline:
+            self.before_report_ready_check()
             try:
                 if ready.is_visible(timeout=1500):
                     break
@@ -489,7 +528,7 @@ class ReportShell(BasePage):
         if report is not None:
             report.log_ui(
                 f"Navigated to dashboard via {via}: {self.page.url} "
-                f"(search_term={settings.DASHBOARD_SEARCH_TERM!r})"
+                f"(search_term={self._catalog_search_term()!r})"
             )
 
     @allure.step("Reload report and measure time until ready")
@@ -508,6 +547,8 @@ class ReportShell(BasePage):
         while time.monotonic() < deadline:
             try:
                 iframe_ok = self._wait_for_dashboard_iframe(timeout=400)
+                if iframe_ok:
+                    self.before_report_ready_check()
                 if iframe_ok and ready.is_visible(timeout=400):
                     elapsed_ms = int((time.perf_counter() - start) * 1000)
                     report = get_current_report()
@@ -552,10 +593,12 @@ class ReportShell(BasePage):
                 f"{_LAST_REFRESH_PHRASE!r}. Captured text: {captured!r}"
             )
 
+        extracted_date_string = remainder.splitlines()[0].strip()
         now = datetime.now()
         age = now - parsed
         limit = timedelta(hours=max_hours)
-        assert age <= limit, (
-            f"Report last-refresh is older than {max_hours} hours: "
-            f"parsed={parsed.isoformat()}, age={age}, now={now.isoformat()}."
-        )
+        with allure.step(f"Dashboard last updated at: {extracted_date_string}"):
+            assert age <= limit, (
+                f"Report last-refresh is older than {max_hours} hours: "
+                f"parsed={parsed.isoformat()}, age={age}, now={now.isoformat()}."
+            )

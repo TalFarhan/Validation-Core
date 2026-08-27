@@ -16,3 +16,6 @@ allure-report/
 Thumbs.db
 *.tmp
 *.swp
+*.log
+.vscode/
+.idea/
