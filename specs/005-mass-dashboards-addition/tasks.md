@@ -103,7 +103,7 @@ description: "Task list for Mass Dashboards Addition — Layer 0 freshness smoke
 
 ## Phase 6: User Story 4 - Hosen Status Layer 0 freshness smoke (Priority: P1)
 
-**Goal**: Open Hosen Status through `ReportShell`, wait on temporary iframe phrase `תמ"צ חוסן`, and call inherited `verify_freshness()`.
+**Goal**: Open Hosen Status through `ReportShell`, wait on exact iframe text `תמ"צ ארצי - דיווחי קה"א יקל"ר`, and call inherited `verify_freshness()`.
 
 **Independent Test**: `pytest tests/ui/hosen_status_dashboard/ -m sanity`
 
@@ -112,6 +112,7 @@ description: "Task list for Mass Dashboards Addition — Layer 0 freshness smoke
 - [x] T013 [P] [US4] Create `HosenStatusPage(ReportShell)` in `tests/ui/hosen_status_dashboard/page.py` with `DASHBOARD_SEARCH_TERM = 'תמ"צ חוסן'` and `_report_ready_locator()` returning `_iframe_phrase_locator('תמ"צ חוסן')`; set `self.url` from existing settings login/dashboard URL; no JSON, slicer, or KPI methods
 - [x] T014 [P] [US4] Create `dashboard` fixture in `tests/ui/hosen_status_dashboard/conftest.py` that returns `HosenStatusPage` and navigates (same retry shape as US1); do not edit root `conftest.py`
 - [x] T015 [US4] Create `tests/ui/hosen_status_dashboard/test_dashboard_smoke.py` with `@pytest.mark.sanity` `test_dashboard_updated_within_24_hours(dashboard)` whose body is `dashboard.verify_freshness()` plus `suite_marks(feature=FEATURE_UI_SMOKE)`
+- [x] T020 [US4] Update `HosenStatusPage._report_ready_locator()` in `tests/ui/hosen_status_dashboard/page.py` to exact iframe text `תמ"צ ארצי - דיווחי קה"א יקל"ר` via `_report_frame().get_by_text(..., exact=True)` (discovery ARIA snapshot). Do not add popup dismiss.
 
 **Checkpoint**: All four reports independently run Layer 0 freshness smoke.
 

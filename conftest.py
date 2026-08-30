@@ -19,6 +19,7 @@ from db.client import DatabaseClient
 from pages.fleet_dashboard.main_dashboard_page import MainDashboardPage
 from reports.test_run_report import (
     ALLURE_RESULTS_DIR,
+    HTML_REPORTS_DIR,
     REPORT_DIR,
     RESULTS_DIR,
     RunReportBook,
@@ -27,6 +28,7 @@ from reports.test_run_report import (
     TestRunReport,
     VIDEOS_DIR,
 )
+from tests.helpers.dashboard_fixture import open_report
 
 DATA_DIR = Path(__file__).resolve().parent / "data"
 AUTH_PATH = Path(settings.AUTH_FILE)
@@ -191,6 +193,14 @@ def pytest_configure(config):
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     ALLURE_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
+
+    # One timestamped HTML report per run so a re-run never overwrites the
+    # previous one. pytest-html only generates a report when htmlpath is set.
+    if hasattr(config.option, "htmlpath") and not config.option.htmlpath:
+        HTML_REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+        config.option.htmlpath = str(
+            HTML_REPORTS_DIR / f"report_{_artifact_stamp()}.html"
+        )
 
 
 @pytest.fixture(scope="session")
@@ -386,34 +396,7 @@ def auth_page(session_page, browser_context, request):
 @pytest.fixture
 def dashboard(auth_page, browser_context):
     """Reuse the open dashboard on the shared tab (reload only when needed)."""
-    ensure_single_tab(browser_context, auth_page)
-    page_obj = MainDashboardPage(auth_page)
-    was_ready = page_obj._dashboard_ready()
-    last_error: Exception | None = None
-    for attempt in range(2):
-        try:
-            page_obj.navigate(force_reload=attempt > 0)
-            last_error = None
-            break
-        except AssertionError as exc:
-            last_error = exc
-            msg = str(exc)
-            transient = (
-                "Could not open products catalog" in msg
-                or "Failed to get user" in msg
-                or page_obj._is_portal_profile_error()
-            )
-            if not transient or attempt == 1:
-                raise
-            print(f"\n[nav] ניווט נכשל (ניסיון {attempt + 1}) — retry...\n{exc}\n")
-            page_obj._recover_from_portal_glitch()
-    if last_error is not None:
-        raise last_error
-    ensure_single_tab(browser_context, auth_page)
-    # Persist auth after a real load/login, not on every reused test.
-    if not was_ready and not page_obj._is_login_page():
-        save_auth_state(browser_context)
-    return page_obj
+    return open_report(MainDashboardPage, auth_page, browser_context)
 
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)

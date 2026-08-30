@@ -13,6 +13,7 @@ from typing import Any
 
 RESULTS_DIR = Path("results")
 REPORT_DIR = RESULTS_DIR / "run-reports"
+HTML_REPORTS_DIR = RESULTS_DIR / "html-reports"
 ALLURE_RESULTS_DIR = RESULTS_DIR / "allure-results"
 SCREENSHOTS_DIR = RESULTS_DIR / "screenshots"
 TRACES_DIR = RESULTS_DIR / "traces"

@@ -15,9 +15,6 @@ from reports.test_run_report import get_current_report
 
 
 _LAST_REFRESH_PHRASE = "הדשבורד עודכן לאחרונה ב:"
-_LAST_REFRESH_PATTERN = re.compile(
-    re.escape(_LAST_REFRESH_PHRASE) + r"\s*(.+)"
-)
 _LAST_REFRESH_DATETIME_TOKEN = re.compile(
     r"(\d{1,4}[./-]\d{1,2}[./-]\d{1,4}"
     r"(?:\s+\d{1,2}:\d{2}(?::\d{2})?(?:\s*[AaPp][Mm])?)?)"
@@ -67,13 +64,40 @@ class ReportShell(BasePage):
         super().__init__(page)
         self.url = ""
 
+    LAST_REFRESH_PHRASE: str = _LAST_REFRESH_PHRASE
+
     def _report_ready_locator(self) -> Locator:
         raise NotImplementedError(
             "Domain page must override _report_ready_locator() "
             "with the visual that means this report is loaded."
         )
 
+    def _last_refresh_phrase(self) -> str:
+        """Freshness caption prefix to search for in the report iframe.
+
+        Layer 0 default is the generic Power BI chrome phrase. Domain pages
+        whose dashboards use a different caption override ``LAST_REFRESH_PHRASE``
+        (or this method) so freshness lookup targets the right text.
+        """
+        return getattr(self, "LAST_REFRESH_PHRASE", None) or _LAST_REFRESH_PHRASE
+
+    def _last_refresh_pattern(self) -> re.Pattern:
+        """Regex capturing the timestamp that follows the freshness phrase."""
+        return re.compile(re.escape(self._last_refresh_phrase()) + r"\s*(.+)")
+
     def after_navigate(self) -> None:
+        return
+
+    def _bypass_secondary_auth(self) -> None:
+        """Domain hook: dismiss a secondary auth/entry screen shown after the
+        catalog click, before the report ready visual is awaited.
+
+        Some reports gate behind an extra authentication/entry step that only
+        appears once the product is opened from the catalog. Layer 0 stays
+        report-agnostic: the default is a no-op, and domain pages override this
+        to dismiss their specific screen. Called from ``navigate()`` after the
+        report is opened and before the ready-locator wait begins.
+        """
         return
 
     def before_report_ready_check(self) -> None:
@@ -88,9 +112,9 @@ class ReportShell(BasePage):
         """Locate a phrase in the report iframe by text or accessible name.
 
         Power BI KPI/card titles are often images or buttons (aria-label /
-        alt), not text nodes. Role ``name`` is a plain string (substring
-        match). Do not ``or_`` locators from a nested FrameLocator — Playwright
-        rejects frame locators inside composite locators.
+        alt), not text nodes, so ``get_by_text`` alone misses them.
+        Role ``name`` is passed as a plain string (substring match) — a
+        compiled regex is double-escaped by Playwright and fails to match.
         """
         frame = self._report_frame()
         return (
@@ -150,14 +174,15 @@ class ReportShell(BasePage):
 
     def _last_refresh_caption_text(self) -> str:
         """Visible last-refresh caption text inside the report iframe."""
+        phrase = self._last_refresh_phrase()
         frame = self._report_frame()
-        caption = frame.get_by_text(re.compile(re.escape(_LAST_REFRESH_PHRASE))).first
+        caption = frame.get_by_text(re.compile(re.escape(phrase))).first
         try:
             expect(caption).to_be_visible(timeout=self.timeout)
         except AssertionError as exc:
             raise AssertionError(
                 "Last-refresh caption "
-                f"{_LAST_REFRESH_PHRASE!r} was not found in the report iframe. "
+                f"{phrase!r} was not found in the report iframe. "
                 f"{self._page_debug_summary()}"
             ) from exc
 
@@ -321,6 +346,52 @@ class ReportShell(BasePage):
             f"{self._page_debug_summary()}.{detail}"
         )
 
+    def _catalog_result_locator(self, term: str) -> Locator:
+        """Locate a catalog product card/link/button by its name text."""
+        return (
+            self.page.get_by_role("link", name=re.compile(re.escape(term)))
+            .or_(self.page.get_by_role("button", name=re.compile(re.escape(term))))
+            .or_(
+                self.page.locator("a, button, [role='listitem'], [role='option']").filter(
+                    has_text=re.compile(re.escape(term))
+                )
+            )
+            .or_(self.page.get_by_text(term, exact=False))
+            .first
+        )
+
+    def _catalog_shows_no_products(self) -> bool:
+        """True when the catalog result area reports an empty result set."""
+        try:
+            return (
+                self.page.get_by_text(re.compile(r"אין מוצרים להצגה|אין מידע"))
+                .first.is_visible(timeout=1000)
+            )
+        except Exception:
+            return False
+
+    def _switch_catalog_to_archive(self) -> bool:
+        """Switch the catalog segmented control to its 'ארכיון' (archive) tab.
+
+        Some products are not listed under the default 'קטלוג' tab; they live
+        under 'ארכיון'. Generic catalog behavior — no report-specific text.
+        """
+        archive = (
+            self.page.get_by_role("radio", name=re.compile(r"^\s*ארכיון\s*$"))
+            .or_(self.page.get_by_role("option", name=re.compile(r"^\s*ארכיון\s*$")))
+            .or_(self.page.get_by_role("tab", name=re.compile(r"^\s*ארכיון\s*$")))
+            .or_(self.page.get_by_text(re.compile(r"^\s*ארכיון\s*$")))
+            .first
+        )
+        try:
+            if archive.is_visible(timeout=1500):
+                print("\n[nav] אין תוצאות ב'קטלוג' — עוברים ללשונית 'ארכיון'...\n")
+                archive.click()
+                return True
+        except Exception:
+            pass
+        return False
+
     def _open_dashboard_via_portal_search(self) -> None:
         self._open_all_products_catalog()
 
@@ -332,18 +403,24 @@ class ReportShell(BasePage):
         search.fill(term)
         search.press("Enter")
 
-        result = (
-            self.page.get_by_role("link", name=re.compile(re.escape(term)))
-            .or_(self.page.get_by_role("button", name=re.compile(re.escape(term))))
-            .or_(
-                self.page.locator("a, button, [role='listitem'], [role='option']").filter(
-                    has_text=re.compile(re.escape(term))
-                )
-            )
-            .or_(self.page.get_by_text(term, exact=False))
-            .first
-        )
-        expect(result).to_be_visible(timeout=self.timeout)
+        result = self._catalog_result_locator(term)
+        try:
+            expect(result).to_be_visible(timeout=self.timeout)
+        except AssertionError:
+            # Product may live under the catalog 'ארכיון' (archive) tab rather
+            # than the default 'קטלוג' tab. Retry the search there once.
+            if not (self._catalog_shows_no_products() and self._switch_catalog_to_archive()):
+                raise
+            search = self._portal_search_box()
+            try:
+                if search.count() > 0:
+                    search.click()
+                    search.fill(term)
+                    search.press("Enter")
+            except Exception:
+                pass
+            result = self._catalog_result_locator(term)
+            expect(result).to_be_visible(timeout=self.timeout)
         result.click()
         ensure_single_tab(self.page.context, self.page)
 
@@ -501,6 +578,7 @@ class ReportShell(BasePage):
                 self._open_dashboard_via_portal_search()
 
         ensure_single_tab(self.page.context, self.page)
+        self._bypass_secondary_auth()
         ready = self._report_ready_locator()
         ready_deadline = time.monotonic() + self.timeout / 1000
         while time.monotonic() < ready_deadline:
@@ -572,10 +650,9 @@ class ReportShell(BasePage):
     def verify_freshness(self, max_hours: int = 24) -> None:
         """Assert the report last-refresh caption is within ``max_hours``.
 
-        Locates generic Power BI chrome containing
-        ``הדשבורד עודכן לאחרונה ב:`` inside the report iframe (text/regex,
-        not dashboard-specific CSS), parses the timestamp, and asserts
-        ``datetime.now() - parsed <= max_hours``.
+        Locates the freshness caption (``self._last_refresh_phrase()``) inside
+        the report iframe (text/regex, not dashboard-specific CSS), parses the
+        timestamp, and asserts ``datetime.now() - parsed <= max_hours``.
         """
         if not self._wait_for_dashboard_iframe():
             raise AssertionError(
@@ -583,18 +660,23 @@ class ReportShell(BasePage):
                 f"{self._page_debug_summary()}"
             )
 
+        phrase = self._last_refresh_phrase()
         captured = self._last_refresh_caption_text()
-        match = _LAST_REFRESH_PATTERN.search(captured)
+        match = self._last_refresh_pattern().search(captured)
         remainder = match.group(1).strip() if match else captured
         parsed = _parse_last_refresh_datetime(remainder)
+        if parsed is None and remainder != captured:
+            # Timestamp may sit outside the phrase's own line (separate node);
+            # fall back to scanning the full captured caption text.
+            parsed = _parse_last_refresh_datetime(captured)
+            remainder = captured if parsed is not None else remainder
         if parsed is None:
             raise AssertionError(
                 "Last-refresh timestamp could not be parsed from caption "
-                f"{_LAST_REFRESH_PHRASE!r}. Captured text: {captured!r}"
+                f"{phrase!r}. Captured text: {captured!r}"
             )
 
         extracted_date_string = remainder.splitlines()[0].strip()
-        print(f"\n---> EXTRACTED DASHBOARD DATE: {extracted_date_string} <---")
         now = datetime.now()
         age = now - parsed
         limit = timedelta(hours=max_hours)

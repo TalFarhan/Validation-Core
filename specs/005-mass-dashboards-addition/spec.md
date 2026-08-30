@@ -147,8 +147,9 @@ within 24 hours.
 
 1. **Given** an authenticated portal session, **When** the Hosen Status
    smoke suite starts, **Then** the local dashboard fixture opens the
-   report via catalog search for `תמ"צ חוסן` and waits until a temporary
-   ready locator matching that search term is visible.
+   report via catalog search for `תמ"צ חוסן` and waits until the exact
+   landing title `תמ"צ ארצי - דיווחי קה"א יקל"ר` is visible in the report
+   iframe (discovery-confirmed; no overlay).
 2. **Given** the Hosen Status report is open and ready, **When**
    `test_dashboard_updated_within_24_hours` runs, **Then** it calls
    `dashboard.verify_freshness()` and passes if last-refresh is within 24
@@ -192,8 +193,9 @@ within 24 hours.
   that inherits `ReportShell`, sets catalog search term `הערכת מצב רשויות`,
   and uses a temporary ready locator matching that search term.
 - **FR-004**: The framework MUST add a Hosen Status Layer 0 page that
-  inherits `ReportShell`, sets catalog search term `תמ"צ חוסן`, and uses a
-  temporary ready locator matching that search term.
+  inherits `ReportShell`, sets catalog search term `תמ"צ חוסן`, and treats
+  exact iframe text `תמ"צ ארצי - דיווחי קה"א יקל"ר` as the report-ready
+  visual. It MUST NOT add popup dismissal.
 - **FR-005**: Each new report MUST have its own smoke package under
   `tests/ui/` with a `dashboard` fixture that returns that report's page
   object and a sanity test `test_dashboard_updated_within_24_hours(dashboard)`
@@ -233,7 +235,7 @@ within 24 hours.
 - **Authorities Status report**: Portal catalog product searched as
   `הערכת מצב רשויות`. Temporary ready visual is that same search term.
 - **Hosen Status report**: Portal catalog product searched as `תמ"צ חוסן`.
-  Temporary ready visual is that same search term.
+  Ready when exact iframe text `תמ"צ ארצי - דיווחי קה"א יקל"ר` is visible.
 - **Temporary ready locator**: Iframe text matching the catalog search
   term, used until live-run feedback supplies the real landing-page title.
 - **Layer 0 smoke package**: Directory with page object, local

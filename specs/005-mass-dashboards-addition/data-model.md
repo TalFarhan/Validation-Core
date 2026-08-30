@@ -15,7 +15,7 @@ visual, and the smoke caller.
 | Class | `AlertsAnalysisPage` | `MarsalPage` | `AuthoritiesStatusPage` | `HosenStatusPage` |
 | Base | `ReportShell` | `ReportShell` | `ReportShell` | `ReportShell` |
 | `DASHBOARD_SEARCH_TERM` | `ניתוח התרעות` | `מרס"ל` | `הערכת מצב רשויות` | `תמ"צ חוסן` |
-| Ready visual text | same as search term (temporary) | same | same | same |
+| Ready visual text | same as search term (temporary) | same | same | `תמ"צ ארצי - דיווחי קה"א יקל"ר` (exact iframe text, discovery-confirmed) |
 | Popup | none | none | none | none |
 | JSON / slicers | forbidden | forbidden | forbidden | forbidden |
 

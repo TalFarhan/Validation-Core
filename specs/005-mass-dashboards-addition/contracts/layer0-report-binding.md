@@ -13,7 +13,7 @@ Fleet consumers of root `dashboard` / `navigate` /
 | `AlertsAnalysisPage` | `tests/ui/alerts_analysis_dashboard/page.py` | `"ניתוח התרעות"` | iframe phrase `"ניתוח התרעות"` (temporary) |
 | `MarsalPage` | `tests/ui/marsal_dashboard/page.py` | `"מרס\"ל"` | iframe phrase `"מרס\"ל"` (temporary) |
 | `AuthoritiesStatusPage` | `tests/ui/authorities_status_dashboard/page.py` | `"הערכת מצב רשויות"` | iframe phrase `"הערכת מצב רשויות"` (temporary) |
-| `HosenStatusPage` | `tests/ui/hosen_status_dashboard/page.py` | `"תמ\"צ חוסן"` | iframe phrase `"תמ\"צ חוסן"` (temporary) |
+| `HosenStatusPage` | `tests/ui/hosen_status_dashboard/page.py` | `"תמ\"צ חוסן"` | exact iframe text `"תמ\"צ ארצי - דיווחי קה"א יקל"ר"` (no popup) |
 
 Shared rules for all four:
 
@@ -81,7 +81,7 @@ belong on the page object.
 `core/**` MUST match none of:
 
 ```text
-ניתוח התרעות|מרס"ל|הערכת מצב רשויות|תמ"צ חוסן
+ניתוח התרעות|מרס"ל|הערכת מצב רשויות|תמ"צ חוסן|תמ"צ ארצי - דיווחי קה"א יקל"ר
 ```
 
 `pages/` MUST gain no new files. `.env` MUST be unchanged.
