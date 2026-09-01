@@ -67,6 +67,11 @@ class Settings:
     ENABLE_VIDEO = _env("ENABLE_VIDEO", "false").lower() == "true"
     SLOW_MO = int(_env("SLOW_MO", "0"))
     PAUSE_ON_FAILURE = _env("PAUSE_ON_FAILURE", "false").lower() == "true"
+    # ReportPortal endpoint/secret read from the environment only (opt-in reporting).
+    # RP_API_KEY stays empty unless exported, so no secret is committed and
+    # reporting simply stays inert until the stack is provisioned.
+    RP_ENDPOINT = _env("RP_ENDPOINT", "http://localhost:8080")
+    RP_API_KEY = _env("RP_API_KEY", "")
 
 
 settings = Settings()

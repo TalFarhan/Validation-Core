@@ -32,8 +32,8 @@ independently testable. Coding standard: every new/changed line carries
 
 **Purpose**: Add the ReportPortal dependency so the agent is importable.
 
-- [ ] T001 Append `pytest-reportportal>=5.4` to `requirements.txt` as a new line, keeping all existing pins unchanged, with an English inline comment noting it pulls in `reportportal-client` transitively
-- [ ] T002 Install dependencies with `pip install -r requirements.txt` and confirm `pytest --help` shows the `--reportportal` option (agent registered)
+- [x] T001 Append `pytest-reportportal>=5.4` to `requirements.txt` as a new line, keeping all existing pins unchanged, with an English inline comment noting it pulls in `reportportal-client` transitively
+- [x] T002 Install dependencies with `pip install -r requirements.txt` and confirm `pytest --help` shows the `--reportportal` option (agent registered) — installed 5.6.11; `--reportportal`, `rp_endpoint`, `rp_api_key` all present
 
 ---
 
@@ -44,9 +44,9 @@ depend on. Reporting MUST stay OFF by default.
 
 **⚠️ CRITICAL**: US1 and US2 cannot be verified until this phase is complete.
 
-- [ ] T003 Add the ReportPortal config block to `pytest.ini` under `[pytest]` (`rp_endpoint`, `rp_project`, `rp_api_key = ${RP_API_KEY}`, `rp_launch`, `rp_launch_attributes`) with English inline comments; do NOT add `--reportportal` to `addopts` so reporting remains opt-in
-- [ ] T004 [P] Surface an `RP_API_KEY` / `RP_ENDPOINT` environment passthrough in `config/settings.py` (read-from-env only, no committed secret value) with English inline comments
-- [ ] T005 Verify `pytest tests/ui/fleet_dashboard/ -m sanity` runs with NO `--reportportal` flag and behaves exactly as before (no launch, no network) — baseline for the regression gate
+- [x] T003 Add the ReportPortal config block to `pytest.ini` under `[pytest]` (`rp_endpoint`, `rp_project`, `rp_api_key = ${RP_API_KEY}`, `rp_launch`, `rp_launch_attributes`) with English inline comments; do NOT add `--reportportal` to `addopts` so reporting remains opt-in
+- [x] T004 [P] Surface an `RP_API_KEY` / `RP_ENDPOINT` environment passthrough in `config/settings.py` (read-from-env only, no committed secret value) with English inline comments
+- [x] T005 Verify `pytest tests/ui/fleet_dashboard/ -m sanity` runs with NO `--reportportal` flag and behaves exactly as before (no launch, no network) — baseline confirmed: 11 tests collect cleanly, RP plugin inert without flag, 3 conftest failure-screenshot unit tests pass (one pre-existing unrelated failure in `test_verify_freshness_stdout.py`, reproduces with RP plugin disabled)
 
 **Checkpoint**: Dependency installed and config present; opt-in switch confirmed inert when off.
 
@@ -64,10 +64,10 @@ diff; `down` tears it down without affecting `ui-tests`.
 > Sequenced first because US1 and US2 need a live ReportPortal server to verify
 > against, and this story is the user's explicit non-destructive requirement.
 
-- [ ] T006 [US3] Create NEW `docker-compose.reportportal.yml` based on the official ReportPortal v5.x Compose topology (`gateway`, `api`, `ui`, `uat`, `jobs`, `analyzer`, `analyzer-train`, `migrations`, `postgres`, `rabbitmq`, `minio`), pinning a fixed release tag, with English inline comments
-- [ ] T007 [US3] In `docker-compose.reportportal.yml`, expose the gateway/UI host port as an overridable variable (default `8080`, e.g. `${RP_UI_PORT:-8080}`) to avoid port collisions
-- [ ] T008 [US3] Confirm `docker-compose.yml` is NOT opened or modified for this feature; run `git diff --exit-code docker-compose.yml` and confirm zero output
-- [ ] T009 [US3] Bring the stack up (`docker compose -f docker-compose.reportportal.yml up -d`), wait until `ps` shows healthy, open the UI at `http://localhost:8080`, and create the `validation_core` project + an API key in the UI
+- [x] T006 [US3] Create NEW `docker-compose.reportportal.yml` based on the official ReportPortal v5.x Compose topology (`gateway`, `api`, `ui`, `uat`, `jobs`, `analyzer`, `migrations`, `postgres`, `rabbitmq`, `opensearch`), pinning fixed release tags, with English inline comments; validated with `docker compose config` (exit 0). Note: reference master uses OpenSearch (not MinIO) for the analyzer and a single `analyzer` service (no separate `analyzer-train`)
+- [x] T007 [US3] In `docker-compose.reportportal.yml`, expose the gateway/UI host port as an overridable variable (`${RP_UI_PORT:-8080}`, plus `${RP_TRAEFIK_PORT:-8081}`) to avoid port collisions
+- [x] T008 [US3] Confirm `docker-compose.yml` is NOT opened or modified for this feature; `git diff --exit-code docker-compose.yml` returned zero output (unchanged)
+- [ ] T009 [US3] Bring the stack up (`docker compose -f docker-compose.reportportal.yml up -d`) — IN PROGRESS: image pull started (Docker 29.7.2). MANUAL follow-up for you: once `ps` shows healthy, open `http://localhost:8080`, log in (superadmin/erebus), create the `validation_core` project + an API key in the UI
 
 **Checkpoint**: ReportPortal server is running in isolation; existing compose file provably untouched.
 
@@ -82,9 +82,9 @@ tree live to the ReportPortal UI.
 suite with `--reportportal` and watch a live launch appear with correct
 pass/fail/duration.
 
-- [ ] T010 [US1] Export the API key for the shell session (`$env:RP_API_KEY = "<key>"`) and run `pytest tests/ui/fleet_dashboard/ -m sanity --reportportal`; confirm a launch named from `rp_launch` appears live in the UI with the correct test tree
-- [ ] T011 [US1] Confirm `rp_launch_attributes` (e.g. `env:local suite:ui`) appear as filterable attributes on the launch, and that attributes are generic run metadata only (no domain/report labels — Constitution II)
-- [ ] T012 [US1] Confirm the OFF path once more: the same suite WITHOUT `--reportportal` creates no launch (US1 must not regress the default run)
+- [ ] T010 [US1] Export the API key for the shell session (`$env:RP_API_KEY = "<key>"`) and run `pytest tests/ui/fleet_dashboard/ -m sanity --reportportal`; confirm a launch named from `rp_launch` appears live in the UI with the correct test tree — BLOCKED pending T009 manual API-key provisioning + live portal SSO (your environment)
+- [ ] T011 [US1] Confirm `rp_launch_attributes` (e.g. `env:local suite:ui`) appear as filterable attributes on the launch, and that attributes are generic run metadata only (no domain/report labels — Constitution II) — BLOCKED pending T010
+- [x] T012 [US1] Confirm the OFF path once more: the same suite WITHOUT `--reportportal` creates no launch (US1 must not regress the default run) — verified: without the flag the RP plugin does not activate (no launch, no network); collection and unit tests run identically to before
 
 **Checkpoint**: Real-time dashboard works when enabled; default runs unaffected.
 
