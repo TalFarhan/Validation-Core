@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 import allure
 from playwright.sync_api import Locator, Page, expect
+from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from browser_session import ensure_single_tab, wait_for_auth_popups_to_finish
 from config.settings import settings
@@ -172,9 +173,34 @@ class ReportShell(BasePage):
             pass
         return self.page.frame_locator("iframe")
 
+    def _dismiss_powerbi_refresh_popup(self) -> None:
+        """Dismiss a Power BI popup that can cover the last-refresh caption.
+
+        A dynamic card popup rendered inside the report iframe can overlap the
+        freshness text. Its close control is a Power BI SVG element, so it is
+        located by its data attribute and clicked with ``force=True`` (regular
+        clicks fail on SVG nodes). When the popup is absent the visibility wait
+        times out and we silently continue.
+        """
+        frame = self._report_frame()
+        close_button = frame.locator(
+            "path[data-sub-selection-display-name='Card_Background_Color']"
+        ).last
+        try:
+            # Force the click because Playwright cannot resolve a stable hit
+            # target on Power BI SVG paths.
+            close_button.wait_for(state="visible", timeout=5000)
+            close_button.click(force=True)
+            # Give the close animation time to finish before reading text.
+            self.page.wait_for_timeout(1000)
+        except PlaywrightTimeoutError:
+            # Popup did not appear; nothing to dismiss.
+            pass
+
     def _last_refresh_caption_text(self) -> str:
         """Visible last-refresh caption text inside the report iframe."""
         phrase = self._last_refresh_phrase()
+        self._dismiss_powerbi_refresh_popup()
         frame = self._report_frame()
         caption = frame.get_by_text(re.compile(re.escape(phrase))).first
         try:

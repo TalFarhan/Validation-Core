@@ -1,0 +1,19 @@
+services:
+  ui-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: validation-core-ui-tests
+    environment:
+      # Headless, unattended run. Quoted so Compose passes plain strings.
+      HEADLESS: "True"
+      PAUSE_ON_FAILURE: "False"
+      MANUAL_LOGIN: "false"
+    volumes:
+      # Export screenshots, traces, HTML/allure reports to the host after exit.
+      - ./results:/app/results
+      # Optional: reuse a saved SSO session for real portal tests. The skeleton
+      # runs fine without it (the test fails fast and still exports artifacts).
+      # Uncomment only if the file exists on the host.
+      - ./auth_state.json:/app/auth_state.json:ro
+    command: ["pytest", "tests/ui/power_outages_dashboard/", "-m", "sanity"]
