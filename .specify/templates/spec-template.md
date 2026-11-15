@@ -125,7 +125,9 @@
   unless tests are updated in the same change.
 - **AC-005**: Layer 2 (`core/components/`) MUST remain report-agnostic when
   present. Domain pages compose `Slicer` and supply definitions plus settle;
-  `core/` MUST NOT load `data/filters.json` or hardcode fleet filter names.
+  `core/` MUST NOT load `data/<report>/` or hardcode fleet filter names.
+- **AC-006**: Report pages MUST live in `pages/<report>/`. Report SQL MUST
+  live in `db/clients/<report>.py`.
 
 ## Success Criteria *(mandatory)*
 

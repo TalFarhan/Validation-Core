@@ -67,7 +67,7 @@ diff; `down` tears it down without affecting `ui-tests`.
 - [x] T006 [US3] Create NEW `docker-compose.reportportal.yml` based on the official ReportPortal v5.x Compose topology (`gateway`, `api`, `ui`, `uat`, `jobs`, `analyzer`, `migrations`, `postgres`, `rabbitmq`, `opensearch`), pinning fixed release tags, with English inline comments; validated with `docker compose config` (exit 0). Note: reference master uses OpenSearch (not MinIO) for the analyzer and a single `analyzer` service (no separate `analyzer-train`)
 - [x] T007 [US3] In `docker-compose.reportportal.yml`, expose the gateway/UI host port as an overridable variable (`${RP_UI_PORT:-8080}`, plus `${RP_TRAEFIK_PORT:-8081}`) to avoid port collisions
 - [x] T008 [US3] Confirm `docker-compose.yml` is NOT opened or modified for this feature; `git diff --exit-code docker-compose.yml` returned zero output (unchanged)
-- [ ] T009 [US3] Bring the stack up (`docker compose -f docker-compose.reportportal.yml up -d`) — IN PROGRESS: image pull started (Docker 29.7.2). MANUAL follow-up for you: once `ps` shows healthy, open `http://localhost:8080`, log in (superadmin/erebus), create the `validation_core` project + an API key in the UI
+- [x] T009 [US3] Bring the stack up (`docker compose -f docker-compose.reportportal.yml up -d`) — DONE: all 10 services healthy, UI returns HTTP 200 at http://localhost:8080/ui/. Note: the first `up -d` returned exit 1 because dependent services (api/jobs/analyzer) had not finished their healthchecks yet; a second `up -d` completed startup. MANUAL sub-step remaining for you: log in (superadmin/erebus), create the `validation_core` project + an API key in the UI
 
 **Checkpoint**: ReportPortal server is running in isolation; existing compose file provably untouched.
 
@@ -102,13 +102,13 @@ still yields HTML+CSV+Allure and no red passing tests.
 
 ### Implementation for User Story 2 (all edits in `conftest.py`, additive)
 
-- [ ] T013 [US2] Add `_reportportal_enabled(config)` helper to `conftest.py` returning `bool(getattr(config.option, "reportportal", False))`, with an English inline comment (keeps all existing paths untouched when the flag is absent)
-- [ ] T014 [US2] Add a module-level `rp_logger = logging.getLogger(__name__)` and `_push_screenshot_to_reportportal(config, image_bytes, name="screenshot")` to `conftest.py` that emits the PNG via the RP logging `attachment` extra, wrapped in `try/except` that swallows all errors, with English inline comments (per contract C4.2)
-- [ ] T015 [US2] Call `_push_screenshot_to_reportportal(...)` from within `_attach_failure_screenshot` (call-phase failures) reusing the already-captured `screenshot_bytes`, respecting the existing `_failure_screenshot_taken` guard so RP never gets a duplicate
-- [ ] T016 [US2] Call `_push_screenshot_to_reportportal(...)` from the setup-phase failure branch in the `auth_page` fixture teardown, reusing its captured `screenshot_bytes` and the same guard flag
-- [ ] T017 [US2] Confirm test log lines route to the current RP item via the agent's logging handler when enabled (no direct RP-client calls in test bodies — page-object/observability discipline)
-- [ ] T018 [US2] Induce a UI failure and run `pytest --reportportal`; confirm the failed RP item shows exactly one screenshot and the log lines
-- [ ] T019 [US2] Fail-safe check: run `pytest --reportportal` against a stopped/unreachable endpoint; confirm the run still produces HTML+CSV+Allure and does NOT turn passing tests red (contract C4.4 / SC-005)
+- [x] T013 [US2] Add `_reportportal_enabled(config)` helper to `conftest.py` returning whether `--reportportal` is on (`option.rp_enabled` / `option.reportportal`), with English inline comments (keeps all existing paths untouched when the flag is absent)
+- [x] T014 [US2] Add a module-level `rp_logger = logging.getLogger(__name__)` and `_push_screenshot_to_reportportal(config, image_bytes, name="screenshot")` to `conftest.py` that emits the PNG via the RP logging `attachment` extra, wrapped in `try/except` that swallows all errors, with English inline comments (per contract C4.2)
+- [x] T015 [US2] Call `_push_screenshot_to_reportportal(...)` from within `_attach_failure_screenshot` (call-phase failures) reusing the already-captured `screenshot_bytes`, respecting the existing `_failure_screenshot_taken` guard so RP never gets a duplicate
+- [x] T016 [US2] Call `_push_screenshot_to_reportportal(...)` from the setup-phase failure branch in the `auth_page` fixture teardown, reusing its captured `screenshot_bytes` and the same guard flag
+- [x] T017 [US2] Confirm test log lines route to the current RP item via the agent's logging handler when enabled (no direct RP-client calls in test bodies — page-object/observability discipline). Bridge: `_push_logs_to_reportportal` forwards the existing validation-steps CSV through `rp_logger`
+- [x] T018 [US2] Induce a UI failure and run `pytest --reportportal`; confirm the failed RP item shows exactly one screenshot and the log lines — verified on launch 3 / item 25: one `image/png` attachment, probe ERROR log, traceback, and validation-steps INFO log
+- [x] T019 [US2] Fail-safe check: run `pytest --reportportal` against a stopped/unreachable endpoint; confirm the run still produces HTML+CSV+Allure and does NOT turn passing tests red (contract C4.4 / SC-005) — 4 passed against `http://127.0.0.1:9`; new HTML + CSV + 4 Allure results; passing tests stayed green
 
 **Checkpoint**: Failure evidence lands in ReportPortal; reporting errors never change outcomes.
 
@@ -116,7 +116,7 @@ still yields HTML+CSV+Allure and no red passing tests.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T020 [P] Verify existing observability outputs still emit with reporting ON and OFF: `results/reports/*.html`, the Hebrew CSV run book, and `results/allure-results/` (Constitution VI)
+- [ ] T020 [P] Verify existing observability outputs still emit with reporting ON and OFF: `result/html-reports/*.html` and the Hebrew CSV run book (Constitution VI)
 - [ ] T021 [P] Update `tests/unit/test_failure_screenshot.py` (or add a sibling unit test) to cover `_reportportal_enabled`/`_push_screenshot_to_reportportal` no-op behavior when the flag is absent, English-only comments
 - [ ] T022 [P] Confirm `quickstart.md` commands are accurate end-to-end (up → provision → run → verify → down)
 - [ ] T023 [P] Review all changed files for English-only inline comments and confirm zero `core/` changes (`git diff --stat` shows nothing under `core/`)

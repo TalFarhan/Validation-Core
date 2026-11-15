@@ -11,8 +11,8 @@ click and BEFORE the report becomes ready. The manual flow is:
     5. Click "אין לי אפשרות להתחבר" → then "שלח הודעת טקסט למספר הטלפון …".
     6. Enter the SMS one-time code.
 
-This module drives that flow. It lives OUTSIDE ``core/`` so Layer 0 stays
-report-agnostic (Constitution v1.2.0); the four page objects call
+This module drives that flow. It lives in ``pages/secondary_auth.py``, outside
+``core/``, so Layer 0 stays report-agnostic. The four page objects call
 ``bypass_secondary_auth`` from their ``_bypass_secondary_auth`` override.
 
 Design notes:

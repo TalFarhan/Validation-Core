@@ -1,0 +1,146 @@
+dashboard_sanity_checks:
+  # ==========================================
+  # 1. מסך תמונת מצב
+  # ==========================================
+  screen_1_status_picture:
+    description: "מסך תמונת מצב - מבצע 'עם כלביא'"
+    operation: "עם כלביא"
+    metrics:
+      total_warning_zones_all_time:
+        expected_value: 1337
+        description: "מספר אזורי התרעה (ללא תאריך)"
+      warning_zones_under_fire:
+        expected_value: 1271
+        description: "אזורי התרעה תחת ירי (בטווח נבחר)"
+      total_alerted_population_all_time:
+        expected_value: 10142584
+        description: "כמות אוכלוסייה מותרעת (ללא תאריך)"
+      alerted_population_selected_range:
+        expected_value: 10091037
+        description: "אוכלוסייה מותרעת (בטווח נבחר)"
+     
+      alerts_by_category:
+        description: "סוגי התרעות בטווח הנבחר"
+        values:
+          category_1_rockets: 16817
+          category_2_aircraft: 519
+          category_10_terrorists: 0 # הוזן 0 בהתאם לעדכון, מופיע גם כ'בהמתנה'
+     
+      top_10_settlements:
+        description: "עשרת היישובים עם כמות ההתרעות הגבוהה ביותר"
+        values:
+          "ראשון לציון": 39
+          "תל אביב-יפו": 36
+          "רמת השרון": 35
+          "נתניה": 34
+          "ראש העין": 32
+          "רמלה": 32
+          "אחיעזר": 31
+          "זיתן": 31
+          "כפר חב\"ד": 31
+          "קריית תעופה": 31
+
+  # ==========================================
+  # 2. מסך ניתוח התרעות
+  # ==========================================
+  screen_2_alerts_analysis:
+    description: "מסך ניתוח התרעות"
+    date_range:
+      start: "2026-09-01"
+      end: "2026-10-18"
+    metrics:
+      total_population_all_time:
+        expected_value: 10142584
+        description: "סה'כ אוכלוסייה"
+      unprotected_population:
+        expected_value: 3389879
+        description: "אוכלוסייה לא ממוגנת"
+      alerted_population_selected_range:
+        expected_value: 9474
+        description: "אוכלוסייה מותרעת (בטווח הנבחר)"
+     
+      alerted_population_by_settlement:
+        description: "אוכלוסייה מותרעת לפי יישוב"
+        values:
+          "ר'ג'ר": 2752
+          "הגושרים": 1344
+          "דפנה": 1096
+          "בית הלל": 1095
+          "מעיין ברוך": 889
+          "יובל": 836
+          "מלכייה": 577
+          "נחל עוז": 562
+          "מנרה": 323
+     
+      alerts_by_hierarchy:
+        description: "התרעות לפי היררכיה גיאוגרפית (סכום וממוצע יומי)"
+        mahoz:
+          sum:
+            "מחוז צפון": 12
+            "פיקוד דרום": 1
+          daily_avg:
+            "מחוז צפון": 1
+            "פיקוד דרום": 1
+        nafa:
+          sum:
+            "נפת חירם": 12
+            "חטמ'ר צפונית - 7643": 1
+          daily_avg:
+            "נפת חירם": 1
+            "חטמ'ר צפונית - 7643": 1
+        rashut:
+          sum:
+            "גליל עליון": 8
+            "מבואות החרמון": 3
+            "רג'ר": 1
+            "שער הנגב": 1
+          daily_avg:
+            "גליל עליון": 1
+            "מבואות החרמון": 1
+            "רג'ר": 1
+            "שער הנגב": 1
+        yeshuv:
+          sum:
+            "הגושרים": 3
+            "יובל": 2
+            "מעיין ברוך": 2
+            "בית הלל": 1
+            "דפנה": 1
+            "מלכייה": 1
+            "מנרה": 1
+            "נחל עוז": 1
+            "רג'ר": 1
+          daily_avg:
+            "הגושרים": 1
+            "יובל": 1
+            "מעיין ברוך": 1
+            "בית הלל": 1
+            "דפנה": 1
+            "מלכייה": 1
+            "מנרה": 1
+            "נחל עוז": 1
+            "רג'ר": 1
+           
+      alerts_by_date:
+        description: "התרעות לפי תאריך"
+        values:
+          "2026-09-29": 1
+          "2026-09-21": 1
+          "2026-09-17": 1
+          "2026-09-10": 5
+          "2026-09-02": 5
+         
+      alerts_by_hour:
+        description: "התרעות לפי שעה (סכום וממוצע יומי)"
+        sum:
+          "00:00": 5
+          "04:00": 5
+          "14:00": 1
+          "15:00": 1
+          "21:00": 1
+        daily_avg:
+          "00:00": 1
+          "04:00": 1
+          "14:00": 1
+          "15:00": 1
+          "21:00": 1

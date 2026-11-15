@@ -1,0 +1,137 @@
+credit_consumption_dashboard:
+  screen_1_summary:
+    dashboard_info:
+      title: "תמ״צ צריכת אשראי"
+      last_updated: "01/11/2026 11:38"
+
+    kpi_metrics:
+      num_population: 10006812
+      average_purchase_expense_routine:
+        physical_purchase: 125.19
+      average_purchase_expense_selected_range:
+        total: 389.33
+        physical_purchase: 129.23
+        online_purchase: 405.79
+      average_change_percentage_vs_routine:
+        physical_purchase: "3.23%"
+        online_purchase: "4.23%"
+
+    daily_trends_by_toggle:
+      expense_amount_line:
+        - date: "02/03/2026"
+          day: "שני"
+          value: 974
+        - date: "03/03/2026"
+          day: "שלישי"
+          value: 610
+      transactions_count_line:
+        - date: "02/03/2026"
+          day: "שני"
+          value: 4.6
+        - date: "03/03/2026"
+          day: "שלישי"
+          value: 3.6
+      expense_amount_bar:
+        - date: "02/03/2026"
+          day: "שני"
+          value: 426
+        - date: "03/03/2026"
+          day: "שלישי"
+          value: 374
+      transactions_count_bar:
+        - date: "02/03/2026"
+          day: "שני"
+          values: [3, 1]
+        - date: "03/03/2026"
+          day: "שלישי"
+          values: [3]
+
+    daily_alerts:
+      - date: "02/03/2026"
+        day: "שלישי"
+        alerts_count: 2168
+      - date: "03/03/2026"
+        day: "שלישי"
+        alerts_count: 3330
+
+    expenses_by_authority_millions:
+      - authority: "תל אביב - יפו"
+        amount: 346
+      - authority: "ירושלים"
+        amount: 211
+      - authority: "רמת גן"
+        amount: 71
+      - authority: "ראשון לציון"
+        amount: 66
+
+    active_filters:
+      guidelines_area: "הכל"
+      district: "הכל"
+      sub_district: "הכל"
+      time_range: "פורים 2026"
+      sector: "הכל"
+      purchase_nature: "הכל"
+      vitality_status: "הכל"
+      category: "הכל"
+      index: "הכל"
+
+  screen_2_data_export:
+    title: "צריכת אשראי - ייצוא נתונים"
+    
+    active_filters:
+      top_bar:
+        period: "פורים 2026"
+        date: "הכל"
+        day_of_week: "הכל"
+      side_bar:
+        guidelines_area: "הכל"
+        district: "הכל"
+        sub_district: "הכל"
+        authority: "הכל"
+        sector: "הכל"
+        purchase_nature: "הכל"
+        vitality_status: "הכל"
+        category: "הכל"
+        index: "הכל"
+
+    export_table_data:
+      - transaction_date: "03/03/2026"
+        authority_name: "מגאר"
+        vitality_status: "חיוני"
+        category: "מזון חיוני"
+        sub_category: "רשתות מזון סופרמרקטים ומרכולים"
+        quantity: 8
+        amount: "1,944.97"
+        purchase_nature: "רכישה מקוונת"
+      - transaction_date: "03/03/2026"
+        authority_name: "אופקים"
+        vitality_status: "לא חיוני"
+        category: "חנויות שונות"
+        sub_category: "מוצרי חשמל אלקטרוניקה ומחשבים"
+        quantity: 7
+        amount: "2,036.56"
+        purchase_nature: "רכישה מקוונת"
+      - transaction_date: "03/03/2026"
+        authority_name: "טירה"
+        vitality_status: "לא חיוני"
+        category: "ביגוד ואופנה"
+        sub_category: "ביגוד והנעלה"
+        quantity: 8
+        amount: "2,080.00"
+        purchase_nature: "רכישה מקוונת"
+      - transaction_date: "03/03/2026"
+        authority_name: "גן יבנה"
+        vitality_status: "חיוני"
+        category: "מזון חיוני"
+        sub_category: "מעדניות- בשר/דגים/חלב"
+        quantity: 9
+        amount: "2,163.09"
+        purchase_nature: "רכישה מקוונת"
+      - transaction_date: "03/03/2026"
+        authority_name: "מעלה יוסף"
+        vitality_status: "לא חיוני"
+        category: "מזון לא חיוני"
+        sub_category: "מסעדות בתי קפה הסעדה וברים"
+        quantity: 8
+        amount: "2,241.00"
+        purchase_nature: "רכישה מקוונת"

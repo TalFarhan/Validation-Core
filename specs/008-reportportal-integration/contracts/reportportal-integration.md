@@ -46,7 +46,7 @@ rp_launch_attributes = env:local suite:ui
 - `docker compose -f docker-compose.reportportal.yml up -d` brings the stack up
   in isolation.
 - `docker compose -f docker-compose.reportportal.yml down` tears it down without
-  touching the `ui-tests` service or `results/`.
+  touching the `ui-tests` service or `result/`.
 
 ## C4. Code integration contract (`conftest.py`)
 

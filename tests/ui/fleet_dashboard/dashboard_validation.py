@@ -5,12 +5,11 @@ from __future__ import annotations
 import time
 from typing import Any
 
-import allure
 import pytest
 
 from config.settings import settings
-from db.client import DatabaseClient, KpiType
-from pages.errors import LoadTimeoutError
+from db.clients.fleet import DatabaseClient, KpiType
+from core.errors import LoadTimeoutError
 from pages.fleet_dashboard.main_dashboard_page import MainDashboardPage
 from reports.test_run_report import get_current_report
 
@@ -49,7 +48,6 @@ FILTER_SECTIONS = {
     "source": "sources",
 }
 
-
 def resolve_filter_values(
     filter_data: dict[str, dict[str, str]], **filters: str
 ) -> dict[str, str]:
@@ -63,8 +61,6 @@ def resolve_filter_values(
             resolved[key] = value
     return resolved
 
-
-@allure.step("Apply dashboard filters from test data")
 def apply_filters(
     dashboard: MainDashboardPage,
     filter_data: dict[str, dict[str, str]],
@@ -75,15 +71,13 @@ def apply_filters(
     report = get_current_report()
     if report is not None:
         report.log_ui(f"Resolving filters: {filters} → {resolved}")
-    with allure.step(f"Resolved filters → {resolved}"):
-        dashboard.apply_filters(
-            district=resolved.get("district"),
-            sub_unit=resolved.get("sub_unit"),
-            category=resolved.get("category"),
-            source=resolved.get("source"),
-        )
+    dashboard.apply_filters(
+        district=resolved.get("district"),
+        sub_unit=resolved.get("sub_unit"),
+        category=resolved.get("category"),
+        source=resolved.get("source"),
+    )
     return resolved
-
 
 def db_filter_kwargs(resolved: dict[str, str]) -> dict[str, Any]:
     return {
@@ -93,18 +87,14 @@ def db_filter_kwargs(resolved: dict[str, str]) -> dict[str, Any]:
         "source": resolved.get("source"),
     }
 
-
-@allure.step("Assert KPI '{kpi_type}' matches DB")
 def assert_kpi_matches_db(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
     kpi_type: KpiType,
     **db_filters: Any,
 ) -> None:
-    with allure.step(f"Read UI KPI '{kpi_type}'"):
-        ui_value = dashboard.get_kpi_value(kpi_type)
-    with allure.step(f"Query DB count for KPI '{kpi_type}'"):
-        db_value = db_client.count_vehicles(kpi_type=kpi_type, **db_filters)
+    ui_value = dashboard.get_kpi_value(kpi_type)
+    db_value = db_client.count_vehicles(kpi_type=kpi_type, **db_filters)
     passed = ui_value == db_value
     report = get_current_report()
     if report is not None:
@@ -119,30 +109,26 @@ def assert_kpi_matches_db(
         f"KPI '{kpi_type}' mismatch: UI={ui_value}, DB={db_value}, filters={db_filters}"
     )
 
-
-@allure.step("Assert all KPI cards match DB")
 def assert_all_kpis_match_db(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
     **db_filters: Any,
 ) -> None:
     """Compare all KPI cards to DB, polling briefly while Power BI cards catch up."""
-    with allure.step("Query all dashboard KPIs from DB"):
-        db_kpis = db_client.get_dashboard_kpis(**db_filters)
+    db_kpis = db_client.get_dashboard_kpis(**db_filters)
     report = get_current_report()
     deadline = time.monotonic() + settings.DEFAULT_TIMEOUT / 1000
     ui_kpis: dict[str, int] = {}
-    with allure.step("Poll UI KPI cards until they match DB (or timeout)"):
-        while True:
-            ui_kpis = {
-                kpi_type: dashboard.get_kpi_value(kpi_type, record=False)
-                for kpi_type in KPI_TYPES
-            }
-            if ui_kpis == db_kpis:
-                break
-            if time.monotonic() >= deadline:
-                break
-            time.sleep(0.2)
+    while True:
+        ui_kpis = {
+            kpi_type: dashboard.get_kpi_value(kpi_type, record=False)
+            for kpi_type in KPI_TYPES
+        }
+        if ui_kpis == db_kpis:
+            break
+        if time.monotonic() >= deadline:
+            break
+        time.sleep(0.2)
 
     for kpi_type in KPI_TYPES:
         ui_value = ui_kpis[kpi_type]
@@ -163,8 +149,6 @@ def assert_all_kpis_match_db(
             f"DB={db_value}, filters={db_filters}"
         )
 
-
-@allure.step("Fetch DB breakdown for chart '{chart_key}'")
 def get_chart_breakdown(
     db_client: DatabaseClient,
     chart_key: str,
@@ -180,13 +164,10 @@ def get_chart_breakdown(
     method = getattr(db_client, method_name)
     return method(**filters)
 
-
 def _top_segments(breakdown: dict[str, int], sample_size: int) -> list[tuple[str, int]]:
     ranked = sorted(breakdown.items(), key=lambda item: item[1], reverse=True)
     return ranked[:sample_size]
 
-
-@allure.step("Assert chart '{chart_key}' tooltip for '{segment_label}' matches DB")
 def assert_chart_tooltip_segment_matches_db(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
@@ -251,8 +232,6 @@ def assert_chart_tooltip_segment_matches_db(
         f"mismatch: UI={entries.get(segment_label, tooltip_text)!r}, DB={expected}"
     )
 
-
-@allure.step("Assert top chart '{chart_key}' tooltips match DB (sample)")
 def assert_chart_tooltips_match_db_sample(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
@@ -363,8 +342,6 @@ def assert_chart_tooltips_match_db_sample(
         f"matched={matched}/{min_required}, filters={db_filters}"
     )
 
-
-@allure.step("Assert withdrawal tooltips match DB via hover scan")
 def assert_withdrawal_tooltips_match_db_via_scan(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
@@ -449,7 +426,6 @@ def assert_withdrawal_tooltips_match_db_via_scan(
         f"segments. found={found}, DB={dict(_top_segments(breakdown, 5))}"
     )
 
-
 def labels_cover_segments(
     ui_labels: list[str],
     expected_segments: dict[str, int],
@@ -470,8 +446,6 @@ def labels_cover_segments(
             missing.append(segment)
     return matched, missing
 
-
-@allure.step("Assert chart '{chart_key}' labels cover DB segments (sample)")
 def assert_chart_labels_match_db_sample(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
@@ -486,7 +460,7 @@ def assert_chart_labels_match_db_sample(
         pytest.skip(f"No DB segments for chart '{chart_key}' (filters={db_filters})")
 
     dashboard.assert_chart_visible(chart_key)
-    ui_labels = dashboard.get_chart_segment_labels(chart_key)
+    ui_labels = list(dashboard.read_chart_segments(chart_key))
     sample = {label: count for label, count in _top_segments(breakdown, sample_size)}
     matched, missing = labels_cover_segments(ui_labels, sample)
 
@@ -512,8 +486,6 @@ def assert_chart_labels_match_db_sample(
         f"matched={matched}, missing={missing}, UI={ui_labels}"
     )
 
-
-@allure.step("Assert unit-chart drilldown labels match DB SubUnit breakdown")
 def assert_unit_drilldown_matches_db(
     dashboard: MainDashboardPage,
     db_client: DatabaseClient,
@@ -532,7 +504,7 @@ def assert_unit_drilldown_matches_db(
             f"No SubUnit segments in warehouse for filters={db_filters}"
         )
 
-    ui_labels = dashboard.get_chart_segment_labels("unit")
+    ui_labels = list(dashboard.read_chart_segments("unit"))
     ranked = _top_segments(breakdown, sample_size)
     sample = {label: count for label, count in ranked}
     matched, missing = labels_cover_segments(ui_labels, sample)
@@ -559,8 +531,6 @@ def assert_unit_drilldown_matches_db(
     )
     return breakdown
 
-
-@allure.step("Assert SubUnit children sum to parent in-use count")
 def assert_sub_units_sum_to_parent(
     db_client: DatabaseClient,
     **db_filters: Any,

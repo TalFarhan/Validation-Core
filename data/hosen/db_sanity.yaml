@@ -1,0 +1,59 @@
+hosen_dashboard:
+  screen_1_landing:
+    survey_status:
+      submitted: 0
+      total: 259
+      missing_authorities:
+      - אבו גוש
+      - אבו סנאן
+      - אבן יהודה
+      - אום אל-פחם
+      - אופקים
+      - אור יהודה
+      - אור עקיבא
+      - אורנית
+      - אזור
+      - אילת
+      - אכסאל
+      - אל בטוף
+      - אל קסום
+      - אלונה
+      - אליכין
+      - אלעד
+      - אלפי מנשה
+      - אלקנה
+      - אעבלין
+      - אפרת
+    kpis:
+      national_average:
+        title: הערכת קה"א - ממוצע ארצי
+        percentage: (ריק)
+        trend: ''
+      categories:
+      - title: מנהיגות
+        percentage: (ריק)
+        trend: ''
+      - title: דאגה לרווחה
+        percentage: (ריק)
+        trend: ''
+      - title: התנהגות אפקטיבית
+        percentage: (ריק)
+        trend: ''
+      - title: שייכות וסולידריות
+        percentage: (ריק)
+        trend: ''
+      - title: רציפות תפקודית
+        percentage: (ריק)
+        trend: ''
+      - title: נרטיב
+        percentage: (ריק)
+        trend: ''
+      - title: מיצוי משאבי קהילה
+        percentage: (ריק)
+        trend: ''
+      - title: מידע ותקשורת
+        percentage: (ריק)
+        trend: ''
+    resilience_scores: []
+    active_filters:
+      date: היום

@@ -73,8 +73,8 @@ pytest tests/ui --reportportal `
   updates live (SC-001).
 - Induce a failure and confirm the failed item carries the Playwright full-page
   screenshot and log lines (SC-002).
-- Confirm the existing outputs are still written: `results/reports/*.html`, the
-  Hebrew CSV run book, and `results/allure-results/` (Constitution VI).
+- Confirm the existing outputs are still written: `result/html-reports/*.html` and
+  the Hebrew CSV run book (Constitution VI).
 - Confirm no diff on the existing compose file:
 
 ```powershell
@@ -91,7 +91,7 @@ docker compose -f docker-compose.reportportal.yml down
 docker compose -f docker-compose.reportportal.yml down -v
 ```
 
-The `ui-tests` service in `docker-compose.yml` and everything under `results/`
+The `ui-tests` service in `docker-compose.yml` and everything under `result/`
 are unaffected by these commands.
 
 ## Troubleshooting

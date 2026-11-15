@@ -11,9 +11,8 @@ from __future__ import annotations
 
 import pytest
 
-from pages.errors import ExpandHierarchyUnavailable
-from reports.allure_catalog import FEATURE_CHART_DRILLDOWN, suite_marks
-from tests.helpers.dashboard_validation import (
+from pages.fleet_dashboard.main_dashboard_page import ExpandHierarchyUnavailable
+from tests.ui.fleet_dashboard.dashboard_validation import (
     DRILLDOWN_DB_CHART_KEY,
     apply_filters,
     assert_sub_units_sum_to_parent,
@@ -21,9 +20,6 @@ from tests.helpers.dashboard_validation import (
     db_filter_kwargs,
     labels_cover_segments,
 )
-
-pytestmark = suite_marks(feature=FEATURE_CHART_DRILLDOWN)
-
 
 def _skip_unless_expand_enabled(
     dashboard,
@@ -43,7 +39,6 @@ def _skip_unless_expand_enabled(
             f"(state={state})"
         )
 
-
 def _expand_or_skip(
     dashboard,
     *,
@@ -60,7 +55,6 @@ def _expand_or_skip(
         )
     except ExpandHierarchyUnavailable as exc:
         pytest.skip(str(exc))
-
 
 @pytest.fixture
 def unit_chart_ready(dashboard, filter_data, db_client):
@@ -81,7 +75,6 @@ def unit_chart_ready(dashboard, filter_data, db_client):
         "children": children,
     }
 
-
 @pytest.mark.sanity
 @pytest.mark.regression
 def test_unit_expand_control_enabled_or_skip(dashboard, unit_chart_ready):
@@ -91,7 +84,6 @@ def test_unit_expand_control_enabled_or_skip(dashboard, unit_chart_ready):
         segment_label=unit_chart_ready["district"],
         expected_value=unit_chart_ready["expected_value"],
     )
-
 
 @pytest.mark.sanity
 @pytest.mark.regression
@@ -120,7 +112,6 @@ def test_expand_hierarchy_changes_unit_chart_labels(dashboard, unit_chart_ready)
         f"DB={children}, missing={missing}"
     )
 
-
 @pytest.mark.sanity
 @pytest.mark.regression
 def test_tooltip_expand_shows_sub_unit_children(dashboard, unit_chart_ready):
@@ -145,7 +136,6 @@ def test_tooltip_expand_shows_sub_unit_children(dashboard, unit_chart_ready):
         f"before={before}, after={after}, DB={children}, missing={missing}"
     )
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_unit_drilldown_sub_units_match_db(dashboard, unit_chart_ready, db_client):
@@ -169,7 +159,6 @@ def test_unit_drilldown_sub_units_match_db(dashboard, unit_chart_ready, db_clien
         dashboard, db_client, sample_size=5, **unit_chart_ready["db_filters"]
     )
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_unit_drilldown_children_sum_to_parent(dashboard, unit_chart_ready, db_client):
@@ -190,7 +179,6 @@ def test_unit_drilldown_children_sum_to_parent(dashboard, unit_chart_ready, db_c
         expected_children=children,
     )
     assert_sub_units_sum_to_parent(db_client, **unit_chart_ready["db_filters"])
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -225,7 +213,6 @@ def test_unit_drilldown_respects_active_filters(dashboard, filter_data, db_clien
     )
     assert_unit_drilldown_matches_db(dashboard, db_client, sample_size=5, **db_filters)
     assert_sub_units_sum_to_parent(db_client, **db_filters)
-
 
 @pytest.mark.sanity
 @pytest.mark.regression

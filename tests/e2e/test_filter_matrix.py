@@ -3,24 +3,19 @@ from pathlib import Path
 
 import pytest
 
-from reports.allure_catalog import FEATURE_FILTER_COMBINATIONS, suite_marks
 from reports.test_run_report import get_current_report
-from tests.helpers.dashboard_validation import (
+from tests.ui.fleet_dashboard.dashboard_validation import (
     KPI_TYPES,
     assert_all_kpis_match_db,
     apply_filters,
     db_filter_kwargs,
 )
 
-pytestmark = suite_marks(feature=FEATURE_FILTER_COMBINATIONS)
-
-MATRIX_PATH = Path(__file__).resolve().parents[2] / "data" / "filter_matrix.json"
-
+MATRIX_PATH = Path(__file__).resolve().parents[2] / "data" / "fleet" / "filter_matrix.json"
 
 def _load_matrix():
     with open(MATRIX_PATH, encoding="utf-8") as file:
         return json.load(file)
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -30,7 +25,6 @@ def test_single_filter_all_kpis_match_db(dashboard, filter_data, db_client, filt
     resolved = apply_filters(dashboard, filter_data, **filter_combo)
     assert_all_kpis_match_db(dashboard, db_client, **db_filter_kwargs(resolved))
 
-
 @pytest.mark.data
 @pytest.mark.regression
 @pytest.mark.parametrize("filter_combo", _load_matrix()["combined_filters"], ids=str)
@@ -38,7 +32,6 @@ def test_combined_filter_all_kpis_match_db(dashboard, filter_data, db_client, fi
     """Multi-filter combinations must keep all KPI cards aligned with the DB."""
     resolved = apply_filters(dashboard, filter_data, **filter_combo)
     assert_all_kpis_match_db(dashboard, db_client, **db_filter_kwargs(resolved))
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -67,7 +60,6 @@ def test_north_truck_transport_center_matches_db(
             filters=db_filters,
         )
     assert ui_value == db_value
-
 
 @pytest.mark.data
 @pytest.mark.regression

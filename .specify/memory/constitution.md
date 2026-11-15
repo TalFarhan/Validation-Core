@@ -1,18 +1,20 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.2.0 (MINOR)
+- Version change: 1.2.0 → 1.3.0 (MINOR)
 - Modified principles:
-  - I. Layered Portal Architecture — Layer 0 last-refresh verification
-  - II. Zero Domain Leakage — last-refresh caption is generic chrome
-  - VII. Extract Shared Behavior Only — authorize last-refresh chrome on Layer 0
+  - I. Layered Portal Architecture — report pages live in pages/<report>/
+  - II. Zero Domain Leakage — root conftest must not import a report
+  - V. Warehouse as Source of Truth — report SQL lives in db/clients/
+  - VII. Extract Shared Behavior Only — generic visual readers vs fleet-only UI
 - Added sections: none
 - Templates requiring updates:
-  - ✅ .specify/templates/plan-template.md (Layer 0 last-refresh in gates)
-  - ✅ .specify/templates/spec-template.md (last-refresh AC)
-  - ✅ .specify/templates/tasks-template.md (Layer 0 freshness in scope)
-  - ✅ README.md (Layer 0 table)
-- Follow-up TODOs: none. Method + smoke test live in
-  specs/003-dashboard-freshness/tasks.md.
+    - ✅ .specify/templates/plan-template.md (visual-reader gate and path tree)
+    - ✅ .specify/templates/spec-template.md (AC-005 data/<report>/, AC-006 paths)
+    - ✅ .specify/templates/tasks-template.md (db/clients and data/<report>/)
+    - ✅ README.md (layer table)
+    - ✅ docs/COVERAGE_CATALOG.md (living paths)
+- Follow-up TODOs: none. Folder moves live in
+  specs/018-architecture-normalization/tasks.md.
 -->
 
 # Validation Core Constitution
@@ -27,6 +29,9 @@ verification. Domain report pages (today: `MainDashboardPage` in
 `pages/fleet_dashboard/`) MUST inherit from or compose `ReportShell`
 instead of re-implementing those steps.
 A new report MUST reuse Layer 0 rather than copy portal navigation.
+Every report page MUST live in `pages/<report>/`. A report page MUST NOT be
+defined under `tests/`. Test modules import the page object. The fleet page
+object remains `pages/fleet_dashboard/main_dashboard_page.py`.
 
 Shared Power BI slicer *interaction* (dropdown, checkbox, search, clear-all)
 MAY live in Layer 2 (`core/components/`). Domain pages MUST compose `Slicer`
@@ -51,6 +56,9 @@ report-specific CSS or visual ids. Report-ready state and
 post-select settle MUST be supplied by the domain page via a locator,
 predicate, or hook — never hardcoded to a fleet visual such as
 `total_vehicles_kpi`.
+The root test `conftest.py` MUST NOT import a report page or a report SQL
+client. Collecting one report MUST NOT load another report's page module or
+warehouse client.
 
 Rationale: Domain strings in `core/` make Layer 0 and Layer 2 unusable for
 the next Power BI report and hide coupling that refactors cannot see.
@@ -83,18 +91,22 @@ End-to-end assertions MUST compare UI values to the SQL Server warehouse
 through the read-only `db` client. `docs/COVERAGE_CATALOG.md` is the
 mapping of KPI ↔ SQL ↔ tests and MUST be updated when a measure, slicer,
 or query changes. Layer 0 MUST NOT embed business SQL or fleet invariants.
+Report-specific SQL MUST live in `db/clients/<report>.py` and MUST stay
+read-only. `db/connection.py` MUST remain a generic engine factory.
+The `db` package root MUST NOT export a report client. `core/` MUST NOT
+import `db.clients`.
 
 Rationale: The product under test is a Power BI report over a warehouse.
 Portal chrome is not a source of business truth.
 
 ### VI. Observability of Validation Runs
-Every test run MUST continue to emit HTML, Hebrew CSV, and Allure
-artifacts under `results/`. Navigation and authentication paths
-SHOULD keep Allure steps and CSV UI log lines. Failures MUST retain
+Every test run MUST continue to emit HTML and Hebrew CSV
+artifacts under `result/`. Navigation and authentication paths
+SHOULD keep CSV UI log lines. Failures MUST retain
 screenshot and Playwright trace attachments. Layer 0 extraction MUST NOT
 drop existing run evidence.
 
-Rationale: BI and Validation teams use the CSV and Allure report as the
+Rationale: BI and Validation teams use the CSV and ReportPortal as the
 audit trail, not pytest stdout.
 
 ### VII. Extract Shared Behavior Only
@@ -103,16 +115,25 @@ Abstractions MUST earn their place.
 Layer 0 (`core/portal`) MUST extract only login/SSO, catalog search, iframe
 waiting, visual-loading timeouts, and generic last-refresh verification.
 
-Layer 2 (`core/components/`) MAY extract Power BI slicer interaction
-(dropdown, checkbox, search, clear-all) when it is report-agnostic. Domain
-filter *names*, value catalogs, and scenario matrices remain on the domain
-page and in `data/`. `core/` MUST NOT load those files.
+Generic Power BI visual readers MAY live in Layer 2 (`core/components/`):
+slicer chrome, KPI value and scale reads, gauge scale, and chart category
+reads. Those modules MUST stay report-agnostic.
 
-KPI cards, tabs, tables, charts, tooltips, and drilldown MUST stay on the
-domain page until a second report requires the same behavior.
+Report-specific tables, tooltips, drilldowns, tabs, filter names, and value
+catalogs MUST stay on the domain page and under `data/<report>/`. Fleet
+tables, tooltips, and drilldowns MUST stay in
+`pages/fleet_dashboard/main_dashboard_page.py`.
 
-Do not invent unused generic APIs beyond the slicer kinds and last-refresh
-verification authorized here.
+`tests/helpers/` MUST contain only generic engines (the parity engine and the
+dashboard opener). Fleet validation helpers MUST live with the fleet suite,
+not in `tests/helpers/`.
+
+Shared ArcGIS secondary login used by more than one report MUST live in
+`pages/secondary_auth.py`. It MUST NOT move into `core/`. Layer 0 keeps the
+`_bypass_secondary_auth` hook as a no-op.
+
+Do not invent unused generic APIs beyond the visual readers and last-refresh
+verification already authorized.
 
 Rationale: Premature generalization of fleet UX recreates the monolith
 under a new name. Slicer chrome is shared Power BI behavior; fleet labels
@@ -121,11 +142,15 @@ are not.
 ## Architecture Constraints
 
 - Layer 0 path is `core/portal/page.py` (`ReportShell`).
-- Layer 2 path is `core/components/slicer.py` (`Slicer`). Domain pages compose
-  it; they MUST NOT put fleet labels inside `core/`.
-- Layer 3 data stays in `data/` (`filters.json`, `filter_matrix.json`) plus
-  domain mapping. `core/` MUST NOT parse those files.
-- Domain path remains `pages/<report>/` (fleet today: `pages/fleet_dashboard/`).
+- Layer 2 path is `core/components/` (`Slicer`, `KPI`, `Chart`, and the visual
+  reader). Domain pages compose them. They MUST NOT put report labels inside
+  `core/`.
+- Domain pages live in `pages/<report>/`. The fleet page object is
+  `pages/fleet_dashboard/main_dashboard_page.py`.
+- Layer 3 catalogs live in `data/<report>/`. Fleet catalogs are
+  `data/fleet/filters.json` and `data/fleet/filter_matrix.json`. The alerts
+  contract is `data/alerts/alerts_contract.yaml`. `core/` MUST NOT parse those
+  files.
 - Inheritance or composition of `ReportShell` is required; copy-paste of
   portal steps is forbidden after Layer 0 exists.
 - `Slicer` is a collaborator, not a base class. Inheritance chain stays
@@ -133,8 +158,12 @@ are not.
 - `BasePage` remains the Playwright timeout/retry foundation; `ReportShell`
   extends or uses it, and domain pages sit above the shell.
 - Settings-driven URLs and search terms are configuration, not domain logic.
-- The warehouse client (`db/`) stays read-only and independent of Layer 0
-  and Layer 2.
+- `db/connection.py` is the generic engine factory. Report SQL lives in
+  `db/clients/<report>.py` and stays read-only and independent of Layer 0 and
+  Layer 2.
+- Root `conftest.py` owns browser, session, auth, and run-report fixtures.
+  Fleet dashboard and fleet database fixtures live in
+  `tests/ui/fleet_dashboard/conftest.py` and `tests/e2e/conftest.py`.
 
 ## Quality Gates
 
@@ -145,6 +174,9 @@ are not.
   declared done unless that suite is 100% green.
 - Reviews MUST reject `core/` changes that introduce report-specific
   locators, labels, or SQL.
+- Reviews MUST reject a new report page under `tests/`, report SQL outside
+  `db/clients/`, a domain label or domain file load inside `core/components/`,
+  and a fleet import in the root `conftest.py`.
 - Coverage catalog and Allure labels MUST stay consistent with page-object
   and query changes.
 
@@ -166,4 +198,4 @@ Layer 2 slicer chrome MUST be justified in
 the plan's Complexity Tracking table. Runtime guidance lives in `README.md`
 and `docs/COVERAGE_CATALOG.md`.
 
-**Version**: 1.2.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-08-25
+**Version**: 1.3.0 | **Ratified**: 2026-08-23 | **Last Amended**: 2026-10-14

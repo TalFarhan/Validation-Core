@@ -20,6 +20,8 @@ class Settings:
         "DB_WITHDRAWN_TABLE", "[FACT].[SigningReturnVehicle]"
     )
     DB_ALLOCATED_TABLE = _env("DB_ALLOCATED_TABLE", "[FACT].[VehicleFlow]")
+    # Alerts database name for the DB-parity pilot (read-only, Trusted_Connection).
+    DB_ALERTS_NAME = _env("DB_ALERTS_NAME", "QA_Alerts_DB")
     DB_ENVIRONMENT = _env("DB_ENVIRONMENT", "מבצעי")
     DB_CSV_PATH = _env("DB_CSV_PATH", "data/raw")
 
@@ -72,6 +74,5 @@ class Settings:
     # reporting simply stays inert until the stack is provisioned.
     RP_ENDPOINT = _env("RP_ENDPOINT", "http://localhost:8080")
     RP_API_KEY = _env("RP_API_KEY", "")
-
 
 settings = Settings()

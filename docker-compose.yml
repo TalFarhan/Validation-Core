@@ -10,8 +10,8 @@ services:
       PAUSE_ON_FAILURE: "False"
       MANUAL_LOGIN: "false"
     volumes:
-      # Export screenshots, traces, HTML/allure reports to the host after exit.
-      - ./results:/app/results
+      # Export screenshots, traces, and HTML/CSV reports to the host after exit.
+      - ./result:/app/result
       # Optional: reuse a saved SSO session for real portal tests. The skeleton
       # runs fine without it (the test fails fast and still exports artifacts).
       # Uncomment only if the file exists on the host.

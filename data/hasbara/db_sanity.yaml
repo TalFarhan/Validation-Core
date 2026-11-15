@@ -1,0 +1,514 @@
+hasbara_dashboard:
+אני 
+        open_requests: 49
+        closed_requests: 1234
+      request_closing_times:
+        average: "00:04:35:46"
+        maximum: "16:14:33:22"
+      response_wait_times:
+        average: "00:01:36:13"
+        maximum: "00:08:11:12"
+        
+    charts:
+      written_media_breakdown:
+        - platform: "WhatsApp"
+          count: 723
+          percentage: "59%"
+        - platform: "Email"
+          count: 197
+          percentage: "16%"
+        - platform: "Facebook/Instagram Messenger"
+          count: 188
+          percentage: "15%"
+        - platform: "SMS"
+          count: 124
+          percentage: "10%"
+        - platform: "Facebook Feed"
+          count: 2
+          percentage: "0%"
+          
+      language_breakdown:
+        - language: "עברית"
+          count: 1234
+          percentage: "100.0%"
+          
+      recurring_requests_breakdown:
+        - type: "פנייה חוזרת"
+          count: 610
+          percentage: "58%"
+        - type: "פנייה יחידה"
+          count: 434
+          percentage: "42%"
+          
+      leading_topics:
+        - topic: "לא לשלוח סקר"
+          count: 185
+        - topic: "ערכות מגן"
+          count: 105
+        - topic: "ללא תוכן"
+          count: 24
+        - topic: "מהנדסי פיקוד העורף"
+          count: 20
+        - topic: "תחזוקת ממד"
+          count: 20
+        - topic: "תחזוקת מקלט"
+          count: 10
+        - topic: "הערכות מצב"
+          count: 8
+        - topic: "מקלט משותף"
+          count: 7
+        - topic: "חלון ממד"
+          count: 6
+        - topic: "מוקד 106"
+          count: 6
+          
+      requests_by_hour_trend:
+        series:
+          - name: "מקסימום פניות"
+            data: [5, 5, 1, 7, 1, 2, 6, 4, 5, 8, 7, 6, 15, 9, 7, 8, 10, 48, 5, 6, 7, 7, 4, 12]
+          - name: "ממוצע פניות"
+            data: [2, 2, 1, 2, 1, 1, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 2, 2, 2, 2, 2, 3]
+          
+        x_axis_labels: ["00:00", "01:00", "02:00", "03:00", "04:00", "05:00", "06:00", "07:00", "08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"]
+
+  screen_2_written_response_investigation:
+    dashboard_info:
+      title: "ניתוח פניות הסברה - תחקור פניות מענה כתוב"
+      date_range: "01/10/2026 - 31/10/2026"
+      platforms_included: "SMS, Facebook/Instagram Messenger, WhatsApp, Email, Facebook Feed"
+      
+    active_filters:
+      hours: "הכל"
+      language: "הכל"
+      platform: "הכל"
+      topic: "הכל"
+
+    investigation_table_data:
+      - handling_time: "00:00:46:58"
+        initial_response_wait_time: ":::"
+        initial_response_time: ""
+        language: "עברית"
+        platform: "Email"
+        agent_name: ""
+        topic: "לא תויג נושא"
+        customer_name: "Sureshbhadur Kunwar"
+        opening_time: "31/10/2026 23:24:57"
+        request_id: "124485"
+        chat_id: "164410"
+
+      - handling_time: "00:00:47:54"
+        initial_response_wait_time: "00:00:10:58"
+        initial_response_time: "31/10/2026 23:33:46"
+        language: "עברית"
+        platform: "Email"
+        agent_name: ""
+        topic: "לא תויג נושא"
+        customer_name: "Sureshbhadur Kunwar"
+        opening_time: "31/10/2026 23:22:48"
+        request_id: "124484"
+        chat_id: "164409"
+
+      - handling_time: "00:00:17:51"
+        initial_response_wait_time: "00:00:05:20"
+        initial_response_time: "31/10/2026 23:18:37"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, ערכות מגן"
+        customer_name: "Sigalit Finkelstein"
+        opening_time: "31/10/2026 23:13:17"
+        request_id: "124483"
+        chat_id: "164408"
+
+      - handling_time: "00:01:32:00"
+        initial_response_wait_time: "00:01:19:41"
+        initial_response_time: "31/10/2026 23:19:28"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, ערכות מגן"
+        customer_name: "איציק לוי"
+        opening_time: "31/10/2026 21:59:47"
+        request_id: "124482"
+        chat_id: "164407"
+
+      - handling_time: "00:00:21:42"
+        initial_response_wait_time: ":::"
+        initial_response_time: ""
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: "Admin"
+        topic: "לא תויג נושא"
+        customer_name: "+972 50-986-6977"
+        opening_time: "31/10/2026 20:36:03"
+        request_id: "124480"
+        chat_id: "160885"
+
+      - handling_time: "00:19:04:08"
+        initial_response_wait_time: "00:01:02:34"
+        initial_response_time: "31/10/2026 20:14:07"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, מקלט ציבורי, מקלט ציבורי"
+        customer_name: "Yoav Metzger"
+        opening_time: "31/10/2026 19:11:33"
+        request_id: "124477"
+        chat_id: "164401"
+
+      - handling_time: "00:00:08:36"
+        initial_response_wait_time: "00:00:08:17"
+        initial_response_time: "31/10/2026 19:08:28"
+        language: "עברית"
+        platform: "Facebook/Instagram Messenger"
+        agent_name: ""
+        topic: "לא לשלוח סקר, קצין פניות ציבור"
+        customer_name: "הבטמו אייצו"
+        opening_time: "31/10/2026 19:00:11"
+        request_id: "124476"
+        chat_id: "164406"
+
+      - handling_time: "00:01:05:18"
+        initial_response_wait_time: "00:00:05:01"
+        initial_response_time: "31/10/2026 19:03:01"
+        language: "עברית"
+        platform: "Email"
+        agent_name: ""
+        topic: "לא לשלוח סקר, תחזוקת ממד"
+        customer_name: "אריה ריינהרץ"
+        opening_time: "31/10/2026 18:58:00"
+        request_id: "124475"
+        chat_id: "164405"
+
+      - handling_time: "00:05:30:25"
+        initial_response_wait_time: "00:00:08:49"
+        initial_response_time: "31/10/2026 18:46:02"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, הערכות מצב"
+        customer_name: "Sylvie Dukatenzeiler"
+        opening_time: "31/10/2026 18:37:13"
+        request_id: "124474"
+        chat_id: "164404"
+
+      - handling_time: "00:00:04:25"
+        initial_response_wait_time: ":::"
+        initial_response_time: ""
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, לא לשלוח סקר, ערכות מגן, ערכות מגן"
+        customer_name: "מלי"
+        opening_time: "31/10/2026 18:26:58"
+        request_id: "124473"
+        chat_id: "164403"
+
+      - handling_time: "00:00:13:42"
+        initial_response_wait_time: "00:00:13:32"
+        initial_response_time: "31/10/2026 18:25:47"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, ערכות מגן"
+        customer_name: "מלי"
+        opening_time: "31/10/2026 18:12:15"
+        request_id: "124472"
+        chat_id: "164403"
+
+      - handling_time: "00:00:43:31"
+        initial_response_wait_time: "00:00:43:12"
+        initial_response_time: "31/10/2026 18:31:00"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, מקלט ציבורי"
+        customer_name: "Yoav Metzger"
+        opening_time: "31/10/2026 17:47:48"
+        request_id: "124470"
+        chat_id: "164401"
+
+      - handling_time: "01:01:27:16"
+        initial_response_wait_time: "00:00:49:23"
+        initial_response_time: "31/10/2026 15:26:29"
+        language: "עברית"
+        platform: "Email"
+        agent_name: ""
+        topic: "מוקד אחר"
+        customer_name: "בשארה חאג"
+        opening_time: "31/10/2026 14:37:06"
+        request_id: "124469"
+        chat_id: "164400"
+
+      - handling_time: "00:04:23:37"
+        initial_response_wait_time: "00:00:05:01"
+        initial_response_time: "31/10/2026 14:06:58"
+        language: "עברית"
+        platform: "WhatsApp"
+        agent_name: ""
+        topic: "לא לשלוח סקר, ערכות מגן"
+        customer_name: "אופיר"
+        opening_time: "31/10/2026 14:01:57"
+        request_id: "124468"
+        chat_id: "164399"
+    
+
+  screen_3_satisfaction_feedback:
+    dashboard_info:
+      title: "ניתוח פניות הסברה - ניתוח משובי שביעות רצון"
+      date_range: "01/10/2026 - 31/10/2026"
+      platforms_included: "SMS, Facebook/Instagram Messenger, WhatsApp, Email, Facebook Feed"
+      data_source: "משובי שביעות רצון דיגיטל 99"
+
+    surveys_summary:
+      phone_center:
+        surveys_sent: "לא ידוע"
+        surveys_filled: 129
+      written_response:
+        surveys_sent: "1,063"
+        surveys_filled: 39
+      quality_control:
+        valid_calls_checked: "אין מידע"
+        validity_percentage: "אין מידע"
+
+    message_reception:
+      question: "האם המידע שהתקבל סייע"
+      responses:
+        - level: "במידה רבה"
+          count: 92
+          percentage: "55%"
+        - level: "במידה בינונית"
+          count: 14
+          percentage: "8%"
+        - level: "במידה מועטה"
+          count: 62
+          percentage: "37%"
+
+    service_reception:
+      active_tab: "אופן אדיב"
+      question: "האם השירות שהתקבל היה אדיב"
+      responses:
+        - level: "במידה רבה"
+          count: 123
+          percentage: "73%"
+        - level: "במידה מועטה"
+          count: 34
+          percentage: "20%"
+        - level: "במידה בינונית"
+          count: 11
+          percentage: "7%"
+
+      active_tab: "אופן מקצועי"
+      question: "האם השירות שהתקבל היה מקצועי"
+      responses:
+        - level: "במידה רבה"
+          count: 105
+          percentage: "63%"
+        - level: "במידה מועטה"
+          count: 53
+          percentage: "32%"
+        - level: "במידה בינונית"
+          count: 10
+          percentage: "6%"
+
+    leading_contact_channels:
+      - channel: "פורטל החירום הלאומי"
+        count: 65
+      - channel: "אחר"
+        count: 60
+      - channel: "אמצעי התקשורת"
+        count: 24
+      - channel: "רשתות חברתיות"
+        count: 17
+      - channel: "מידע מהרשויות המקומיות"
+        count: 9
+      - channel: "מידע משכנים וקרובים"
+        count: 3
+
+    platforms_breakdown:
+      - platform: "מוקד טלפוני"
+        count: 129
+        percentage: "76.79%"
+      - platform: "Whatsapp"
+        count: 33
+        percentage: "19.64%"
+      - platform: "Messenger"
+        count: 3
+        percentage: "1.79%"
+      - platform: "SMS"
+        count: 3
+        percentage: "1.79%"
+
+  screen_4_feedback_investigation:
+    dashboard_info:
+      title: "ניתוח פניות הסברה - ניתוח משובי שביעות רצון (תחקור משובים)"
+      date_range: "01/10/2026 - 31/10/2026"
+      platforms_included: "SMS, Facebook/Instagram Messenger, WhatsApp, Email, Facebook Feed"
+      
+    active_filters:
+      information: "הכל"
+      service_orientation: "הכל"
+      professionalism: "הכל"
+      platform: "הכל"
+      settlement: "הכל"
+      hours: "הכל"
+
+    feedback_investigation_table_data:
+      
+      - request_id: "124455"
+        opening_time: "30/10/2026 15:21:40"
+        initial_response_time: "30/10/2026 15:30:16"
+        platform: "Whatsapp"
+        customer_name: "166240"
+        agent_name: ""
+        survey_sent_time: "31/10/2026 20:06"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה רבה"
+        info_helpful: "במידה רבה"
+        phone_number: "0548019085"
+        comments: ""
+
+      - request_id: ""
+        opening_time: ""
+        initial_response_time: ""
+        platform: "מוקד טלפוני"
+        customer_name: ""
+        agent_name: ""
+        survey_sent_time: "31/10/2026 13:58"
+        service_courteous: "במידה מועטה"
+        service_professional: "במידה מועטה"
+        info_helpful: "במידה בינונית"
+        phone_number: "0525264866"
+        comments: "לא היה מעניין"
+
+      - request_id: ""
+        opening_time: ""
+        initial_response_time: ""
+        platform: "מוקד טלפוני"
+        customer_name: ""
+        agent_name: ""
+        survey_sent_time: "30/10/2026 13:16"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה בינונית"
+        info_helpful: "במידה מועטה"
+        phone_number: "0547108086"
+        comments: "מצאנו במחסן ערכות אב\"כ ישנות מאוד, ברור לנו שלא ניתן לזרוק אותן, אבל נאמר לנו לשמור אותן בבית, מניחה שזה בגלל שאין הנחיה אחרת, אבל זה לא ממש עוזר"
+
+      - request_id: ""
+        opening_time: ""
+        initial_response_time: ""
+        platform: "מוקד טלפוני"
+        customer_name: ""
+        agent_name: ""
+        survey_sent_time: "30/10/2026 09:47"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה רבה"
+        info_helpful: "במידה בינונית"
+        phone_number: "0526070448"
+        comments: "כבר עניתי פעם אחת על המשוב אחרי השיחה"
+
+      - request_id: ""
+        opening_time: ""
+        initial_response_time: ""
+        platform: "מוקד טלפוני"
+        customer_name: ""
+        agent_name: ""
+        survey_sent_time: "30/10/2026 07:07"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה רבה"
+        info_helpful: "במידה רבה"
+        phone_number: "0544202071"
+        comments: ""
+
+      - request_id: "124422"
+        opening_time: "29/10/2026 20:33:16"
+        initial_response_time: "29/10/2026 21:17:56"
+        platform: "Whatsapp"
+        customer_name: "166277"
+        agent_name: ""
+        survey_sent_time: "30/10/2026 05:36"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה רבה"
+        info_helpful: "במידה רבה"
+        phone_number: "0533434515"
+        comments: ""
+
+      - request_id: "124386"
+        opening_time: "29/10/2026 08:28:45"
+        initial_response_time: "29/10/2026 08:29:36"
+        platform: "Whatsapp"
+        customer_name: "166252"
+        agent_name: ""
+        survey_sent_time: "29/10/2026 21:18"
+        service_courteous: "במידה מועטה"
+        service_professional: "במידה מועטה"
+        info_helpful: "במידה מועטה"
+        phone_number: "054364285"
+        comments: "חייבת ביקורת של פיקוד העורף בקרן היסוד 8 כניסה א בת ים לאור הזנחה של המקלט"
+
+      - request_id: ""
+        opening_time: ""
+        initial_response_time: ""
+        platform: "מוקד טלפוני"
+        customer_name: ""
+        agent_name: ""
+        survey_sent_time: "29/10/2026 13:51"
+        service_courteous: "במידה מועטה"
+        service_professional: "במידה מועטה"
+        info_helpful: "במידה מועטה"
+        phone_number: "0544355552"
+        comments: "העלאת תודעת השירות"
+
+      - request_id: "124393"
+        opening_time: "29/10/2026 10:44:27"
+        initial_response_time: "29/10/2026 10:55:42"
+        platform: "Whatsapp"
+        customer_name: "166256"
+        agent_name: ""
+        survey_sent_time: "29/10/2026 13:37"
+        service_courteous: "במידה מועטה"
+        service_professional: "במידה מועטה"
+        info_helpful: "במידה מועטה"
+        phone_number: "0527138455"
+        comments: "שתחזרו אלי בבקשה"
+
+      - request_id: "124391"
+        opening_time: "29/10/2026 10:20:21"
+        initial_response_time: ""
+        platform: "Whatsapp"
+        customer_name: "62995"
+        agent_name: ""
+        survey_sent_time: "29/10/2026 13:16"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה מועטה"
+        info_helpful: "במידה מועטה"
+        phone_number: "052-272-6100"
+        comments: ""
+
+      - request_id: "124386"
+        opening_time: "29/10/2026 08:28:45"
+        initial_response_time: "29/10/2026 08:29:36"
+        platform: "Whatsapp"
+        customer_name: "166252"
+        agent_name: ""
+        survey_sent_time: "29/10/2026 13:16"
+        service_courteous: "במידה מועטה"
+        service_professional: "במידה מועטה"
+        info_helpful: "במידה מועטה"
+        phone_number: "0505383736"
+        comments: "המקלט לא ראוי השירותים לא עובדים צחנה ויש ריהוט ישן וספסלים מברזל"
+
+      - request_id: "124394"
+        opening_time: "29/10/2026 10:55:36"
+        initial_response_time: "29/10/2026 11:03:11"
+        platform: "Whatsapp"
+        customer_name: "166257"
+        agent_name: ""
+        survey_sent_time: "29/10/2026 13:15"
+        service_courteous: "במידה רבה"
+        service_professional: "במידה רבה"
+        info_helpful: "במידה רבה"
+        phone_number: "0506705861"
+        comments: "אני מבינה שזו התשובה הרשמית. אבל זה לא הגיוני לדרוש מאזרחים לשמור מסיכות שאינן תקינות ואין בהן שימוש כל כך הרבה שנים. החוק מ 2014 לא רלוונטי ואתם צריכים"
+
+            

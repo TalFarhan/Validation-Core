@@ -25,7 +25,7 @@ COPY . .
 #                             which would otherwise block the container forever.
 #   MANUAL_LOGIN=false    -> no interactive SSO; the run fails fast if no
 #                             auth_state.json is mounted, and still exports
-#                             artifacts (screenshots, reports) to results/.
+#                             artifacts (screenshots, reports) to result/.
 ENV HEADLESS=True \
     PAUSE_ON_FAILURE=False \
     MANUAL_LOGIN=false \

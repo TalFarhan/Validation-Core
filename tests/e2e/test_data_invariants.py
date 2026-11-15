@@ -1,10 +1,5 @@
 import pytest
 
-from reports.allure_catalog import FEATURE_DATA_INTEGRITY, suite_marks
-
-pytestmark = suite_marks(feature=FEATURE_DATA_INTEGRITY)
-
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_db_in_use_not_exceeds_total(db_client):
@@ -12,13 +7,11 @@ def test_db_in_use_not_exceeds_total(db_client):
     kpis = db_client.get_dashboard_kpis()
     assert kpis["in_use"] <= kpis["total"]
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_ui_in_use_not_exceeds_total(dashboard):
     """In-use KPI cannot exceed total received on the dashboard."""
     assert dashboard.get_kpi_value("in_use") <= dashboard.get_kpi_value("total")
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -28,7 +21,6 @@ def test_db_withdrawn_comes_from_fact_table(db_client):
     assert kpis["withdrawn"] == db_client.count_vehicles(kpi_type="withdrawn")
     assert kpis["withdrawn"] >= 0
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_db_allocated_comes_from_fact_table(db_client):
@@ -36,7 +28,6 @@ def test_db_allocated_comes_from_fact_table(db_client):
     kpis = db_client.get_dashboard_kpis()
     assert kpis["allocated"] == db_client.count_vehicles(kpi_type="allocated")
     assert kpis["allocated"] >= 0
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -47,7 +38,6 @@ def test_db_source_breakdown_sums_to_in_use(db_client):
         pytest.skip("No in-use vehicles grouped by source")
     assert sum(by_source.values()) == db_client.count_vehicles(kpi_type="in_use")
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_db_unit_breakdown_sums_to_in_use(db_client):
@@ -57,7 +47,6 @@ def test_db_unit_breakdown_sums_to_in_use(db_client):
         pytest.skip("No in-use vehicles grouped by unit")
     assert sum(by_unit.values()) == db_client.count_vehicles(kpi_type="in_use")
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_db_category_breakdown_sums_to_total(db_client):
@@ -66,7 +55,6 @@ def test_db_category_breakdown_sums_to_total(db_client):
     if not by_category:
         pytest.skip("No vehicles grouped by category")
     assert sum(by_category.values()) == db_client.count_vehicles(kpi_type="total")
-
 
 @pytest.mark.data
 @pytest.mark.regression

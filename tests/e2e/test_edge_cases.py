@@ -3,11 +3,7 @@ import time
 import pytest
 from playwright.sync_api import expect
 
-from reports.allure_catalog import FEATURE_EDGE_CASES, suite_marks
-from tests.helpers.dashboard_validation import assert_all_kpis_match_db, apply_filters, db_filter_kwargs
-
-pytestmark = suite_marks(feature=FEATURE_EDGE_CASES)
-
+from tests.ui.fleet_dashboard.dashboard_validation import assert_all_kpis_match_db, apply_filters, db_filter_kwargs
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -47,7 +43,6 @@ def test_zero_count_filter_shows_zero_kpi(dashboard, zero_count_filters, db_clie
         # Cascaded away: option missing or not shown under the current slicers.
         assert option_count == 0 or not option_visible
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_clear_filters_restores_db_baseline(dashboard, filter_data, db_client):
@@ -56,7 +51,6 @@ def test_clear_filters_restores_db_baseline(dashboard, filter_data, db_client):
     dashboard.clear_all_applied_filters()
     assert_all_kpis_match_db(dashboard, db_client)
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_allocated_kpi_matches_fact_vehicle_flow(dashboard, db_client):
@@ -64,14 +58,12 @@ def test_allocated_kpi_matches_fact_vehicle_flow(dashboard, db_client):
     db_count = db_client.count_vehicles(kpi_type="allocated")
     assert dashboard.get_kpi_value("allocated") == db_count
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_withdrawn_kpi_matches_fact_signing_return(dashboard, db_client):
     """Withdrawn KPI must match FACT.SigningReturnVehicle (רכבים שזוכו)."""
     db_count = db_client.count_vehicles(kpi_type="withdrawn")
     assert dashboard.get_kpi_value("withdrawn") == db_count
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -91,7 +83,6 @@ def test_page_refresh_restores_baseline_kpis(dashboard, filter_data, db_client):
         time.sleep(0.5)
     dashboard.wait_for_visible(dashboard.total_vehicles_kpi, timeout_ms=dashboard.timeout)
     assert_all_kpis_match_db(dashboard, db_client)
-
 
 @pytest.mark.data
 @pytest.mark.regression

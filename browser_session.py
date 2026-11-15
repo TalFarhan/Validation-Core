@@ -156,3 +156,17 @@ def wait_for_auth_popups_to_finish(context: BrowserContext, *, timeout_ms: int =
         if not auth_pages:
             return
         time.sleep(0.5)
+
+
+def save_auth_state(context: BrowserContext) -> None:
+    """Persist cookies and localStorage so the next pytest run stays logged in."""
+    from pathlib import Path
+
+    from config.settings import settings
+
+    path = Path(settings.AUTH_FILE)
+    try:
+        context.storage_state(path=str(path))
+        print(f"\n[auth] Session saved → {path.resolve()}\n")
+    except Exception as exc:
+        print(f"\n[auth] WARNING: could not save session: {exc}\n")

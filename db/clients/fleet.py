@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-import allure
 from sqlalchemy import text
 from sqlalchemy.engine import Engine
 
@@ -19,7 +18,6 @@ _DIM_STATUS_FILTERS = {
     "total": "1 = 1",
     "in_use": "[IsActive] = 1",
 }
-
 
 class DatabaseClient:
     """Runs SELECT/COUNT queries for dashboard KPI validation."""
@@ -100,7 +98,6 @@ class DatabaseClient:
         if report is not None:
             report.log_db_query(method=method, sql=sql, params=params, result=result)
 
-    @allure.step("DB: count_vehicles")
     def count_vehicles(
         self,
         *,
@@ -136,7 +133,6 @@ class DatabaseClient:
         self._record_query("count_vehicles", sql, params_with_kpi, value)
         return value
 
-    @allure.step("DB: get_dashboard_kpis")
     def get_dashboard_kpis(
         self,
         *,
@@ -158,7 +154,6 @@ class DatabaseClient:
         self._record_query("get_dashboard_kpis", "composed count_vehicles", filters, result)
         return result
 
-    @allure.step("DB: get_vehicle_by_id ({vehicle_id})")
     def get_vehicle_by_id(self, vehicle_id: int | str) -> dict[str, Any]:
         sql = f"SELECT * FROM {self._dim_table} WHERE [VehicleID] = :vehicle_id"
         params = {"vehicle_id": int(vehicle_id)}
@@ -174,7 +169,6 @@ class DatabaseClient:
         self._record_query("get_vehicle_by_id", sql, params, result)
         return result
 
-    @allure.step("DB: get_sample_vehicle_id")
     def get_sample_vehicle_id(
         self,
         *,
@@ -213,7 +207,6 @@ class DatabaseClient:
         self._record_query("get_sample_vehicle_id", sql, params_with_kpi, value)
         return value
 
-    @allure.step("DB: get_unique_vehicle_id_for_search")
     def get_unique_vehicle_id_for_search(
         self,
         *,
@@ -263,7 +256,6 @@ class DatabaseClient:
         self._record_query("get_unique_vehicle_id_for_search", sql, params, value)
         return value
 
-    @allure.step("DB: count_vehicles_by_id_contains ({needle})")
     def count_vehicles_by_id_contains(
         self,
         needle: int | str,
@@ -304,7 +296,6 @@ class DatabaseClient:
         self._record_query("count_vehicles_by_id_contains", sql, params, value)
         return value
 
-    @allure.step("DB: count_grouped_by ({group_column})")
     def count_grouped_by(
         self,
         group_column: str,
@@ -363,7 +354,6 @@ class DatabaseClient:
     def count_by_category(self, **filters: Any) -> dict[str, int]:
         return self.count_grouped_by("VehicleCategory", kpi_type="total", **filters)
 
-    @allure.step("DB: count_by_withdrawal_reason")
     def count_by_withdrawal_reason(self, **filters: Any) -> dict[str, int]:
         """Withdrawn rows grouped by TransferReason (withdrawal-reasons chart)."""
         sql = f"""

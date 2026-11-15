@@ -1,15 +1,11 @@
 import pytest
 
-from reports.allure_catalog import FEATURE_CHARTS, suite_marks
-from tests.helpers.dashboard_validation import (
+from tests.ui.fleet_dashboard.dashboard_validation import (
     CHART_LABEL_KEYS,
     apply_filters,
     assert_chart_labels_match_db_sample,
     db_filter_kwargs,
 )
-
-pytestmark = suite_marks(feature=FEATURE_CHARTS)
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -22,7 +18,6 @@ def test_chart_is_visible(dashboard, chart_key):
     """All dashboard charts must render."""
     dashboard.assert_chart_visible(chart_key)
 
-
 @pytest.mark.data
 @pytest.mark.regression
 @pytest.mark.parametrize("chart_key", CHART_LABEL_KEYS, ids=list(CHART_LABEL_KEYS))
@@ -31,7 +26,6 @@ def test_chart_labels_match_db(dashboard, db_client, chart_key):
     assert_chart_labels_match_db_sample(
         dashboard, db_client, chart_key, sample_size=5
     )
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -44,7 +38,6 @@ def test_source_chart_db_distinct_count(dashboard, db_client):
     dashboard.assert_chart_visible("source")
     assert len(by_source) >= 1
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_unit_chart_db_distinct_count(dashboard, db_client):
@@ -55,7 +48,6 @@ def test_unit_chart_db_distinct_count(dashboard, db_client):
 
     dashboard.assert_chart_visible("unit")
     assert len(by_unit) >= 1
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -68,7 +60,6 @@ def test_category_chart_db_distinct_count(dashboard, db_client):
     dashboard.assert_chart_visible("category")
     assert len(by_category) >= 1
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_withdrawal_chart_db_distinct_count(dashboard, db_client):
@@ -80,7 +71,6 @@ def test_withdrawal_chart_db_distinct_count(dashboard, db_client):
     dashboard.assert_chart_visible("withdrawal")
     assert len(by_reason) >= 1
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_charts_remain_visible_after_filter(dashboard, filter_data):
@@ -88,7 +78,6 @@ def test_charts_remain_visible_after_filter(dashboard, filter_data):
     apply_filters(dashboard, filter_data, district="dan")
     for chart_key in ("source", "unit", "category"):
         dashboard.assert_chart_visible(chart_key)
-
 
 @pytest.mark.data
 @pytest.mark.regression

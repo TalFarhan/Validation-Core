@@ -27,17 +27,16 @@ def _root_conftest(request):
     raise AssertionError("root conftest.py plugin was not loaded")
 
 
-def test_call_failure_attaches_html_and_allure(request, monkeypatch, tmp_path):
+def test_call_failure_attaches_html_and_screenshot(request, monkeypatch, tmp_path):
     conftest = _root_conftest(request)
     monkeypatch.setattr(conftest, "SCREENSHOTS_DIR", tmp_path)
-    attached = {}
+    rp_pushes = []
 
-    def _fake_allure_attach(body, name=None, attachment_type=None, extension=None):
-        attached["body"] = body
-        attached["name"] = name
-        attached["attachment_type"] = attachment_type
+    def _fake_rp_push(config, image_bytes, name="screenshot"):
+        # Record the reused bytes; the helper must not take another screenshot.
+        rp_pushes.append((image_bytes, name))
 
-    monkeypatch.setattr(conftest.allure, "attach", _fake_allure_attach)
+    monkeypatch.setattr(conftest, "_push_screenshot_to_reportportal", _fake_rp_push)
 
     page = _FakePage()
     item = SimpleNamespace(name="test_example", funcargs={"auth_page": page})
@@ -45,11 +44,10 @@ def test_call_failure_attaches_html_and_allure(request, monkeypatch, tmp_path):
 
     assert conftest._attach_failure_screenshot(item, report) is True
     assert page.screenshot_kwargs == {"full_page": True}
-    assert attached["body"] == page.payload
-    assert attached["name"] == "screenshot"
     assert report.extras, "pytest-html extras.image must be appended"
     assert report.extras[0]["format_type"] == "image"
     assert list(tmp_path.glob("*_FAILED.png")), "screenshot file should be written"
+    assert rp_pushes == [(page.payload, "screenshot")]
 
 
 def test_closed_page_does_not_raise(request):
@@ -72,3 +70,22 @@ def test_passing_call_does_not_screenshot(request):
 
     assert conftest._attach_failure_screenshot(item, report) is False
     assert page.screenshot_kwargs is None
+
+
+def test_reportportal_error_does_not_fail_screenshot(request, monkeypatch, tmp_path):
+    """A ReportPortal outage must not prevent HTML screenshot capture."""
+    conftest = _root_conftest(request)
+    monkeypatch.setattr(conftest, "SCREENSHOTS_DIR", tmp_path)
+    monkeypatch.setattr(conftest, "_reportportal_enabled", lambda config: True)
+
+    def _boom(*args, **kwargs):
+        raise RuntimeError("ReportPortal unreachable")
+
+    monkeypatch.setattr(conftest.rp_logger, "error", _boom)
+
+    page = _FakePage()
+    item = SimpleNamespace(name="test_rp_down", funcargs={"auth_page": page}, config=None)
+    report = SimpleNamespace(when="call", failed=True, extras=[])
+
+    assert conftest._attach_failure_screenshot(item, report) is True
+    assert item._failure_screenshot_taken is True

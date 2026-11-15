@@ -1,6 +1,5 @@
 pytest>=8.0
 pytest-html>=4.0
-allure-pytest>=2.13
 playwright>=1.40
 python-dotenv>=1.0
 greenlet==3.1.1
@@ -8,5 +7,6 @@ pandas>=2.0
 openpyxl>=3.1
 sqlalchemy>=2.0
 pyodbc>=5.0
+pyyaml>=6.0
 # ReportPortal pytest agent (opt-in reporting; pulls in reportportal-client transitively).
 pytest-reportportal>=5.4

@@ -2,8 +2,7 @@
 
 import pytest
 
-from reports.allure_catalog import FEATURE_CHART_TOOLTIPS, suite_marks
-from tests.helpers.dashboard_validation import (
+from tests.ui.fleet_dashboard.dashboard_validation import (
     CHART_DB_KEYS,
     CHART_KEYS,
     apply_filters,
@@ -11,9 +10,6 @@ from tests.helpers.dashboard_validation import (
     db_filter_kwargs,
     get_chart_breakdown,
 )
-
-pytestmark = suite_marks(feature=FEATURE_CHART_TOOLTIPS)
-
 
 @pytest.mark.sanity
 @pytest.mark.regression
@@ -24,7 +20,6 @@ def test_chart_tooltip_appears_on_hover(dashboard, chart_key):
     dashboard.hover_chart(chart_key)
     dashboard.assert_tooltip_visible()
     assert dashboard.get_tooltip_text(), f"Empty tooltip for chart '{chart_key}'"
-
 
 @pytest.mark.sanity
 @pytest.mark.regression
@@ -52,7 +47,6 @@ def test_chart_tooltip_segment_matches_db(dashboard, db_client, chart_key):
         chart_key,
         sample_size=2,
     )
-
 
 @pytest.mark.data
 @pytest.mark.regression

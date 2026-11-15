@@ -1,11 +1,6 @@
 import pytest
 from playwright.sync_api import expect
 
-from reports.allure_catalog import FEATURE_UI_FILTERS, suite_marks
-
-pytestmark = suite_marks(feature=FEATURE_UI_FILTERS)
-
-
 @pytest.mark.sanity
 def test_basic_district_and_category_filtering(dashboard, filter_data):
     """Verifies standard filters update KPIs logic correctly."""
@@ -18,7 +13,6 @@ def test_basic_district_and_category_filtering(dashboard, filter_data):
     assert filtered_total <= initial_total, "Filtered total should not exceed the unfiltered baseline."
     assert filtered_total < initial_total, "Applying district and category filters should reduce the total count."
     expect(dashboard.clear_filters_btn).to_be_visible()
-
 
 @pytest.mark.sanity
 def test_cross_category_filter_aggregation(dashboard, filter_data):
@@ -39,7 +33,6 @@ def test_cross_category_filter_aggregation(dashboard, filter_data):
     assert combined_total <= after_category
     assert combined_total > 0, "Combined filters should still return a positive vehicle count."
 
-
 @pytest.mark.sanity
 def test_cascading_dropdown_dependency(dashboard, filter_data):
     """Ensures sub-filters dynamically adapt depending on top-level parent scope."""
@@ -54,7 +47,6 @@ def test_cascading_dropdown_dependency(dashboard, filter_data):
     dan_sub_unit = dashboard.option(filter_data["sub_units"]["dan"], "SubUnit")
     expect(dan_sub_unit).not_to_be_visible()
 
-
 @pytest.mark.sanity
 def test_clear_filter_functionality_restoration(dashboard, filter_data):
     """Confirms reset action restores default view parameters."""
@@ -65,7 +57,6 @@ def test_clear_filter_functionality_restoration(dashboard, filter_data):
 
     restored_total = dashboard.get_kpi_value("total")
     assert restored_total == baseline_total, "Clearing filters should restore exact baseline totals."
-
 
 @pytest.mark.sanity
 def test_tab_navigation_functionality(dashboard):

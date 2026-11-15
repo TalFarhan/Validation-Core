@@ -2,17 +2,13 @@ import time
 
 import pytest
 
-from reports.allure_catalog import FEATURE_VEHICLE_TABLE, suite_marks
-from tests.helpers.dashboard_validation import (
+from tests.ui.fleet_dashboard.dashboard_validation import (
     KPI_TYPES,
     TAB_KPI_MAP,
     TAB_NAMES,
     apply_filters,
     db_filter_kwargs,
 )
-
-pytestmark = suite_marks(feature=FEATURE_VEHICLE_TABLE)
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -23,7 +19,6 @@ def test_tab_kpi_matches_db(dashboard, db_client, tab_name):
     dashboard.select_tab(tab_name)
     db_count = db_client.count_vehicles(kpi_type=kpi_type)
     assert dashboard.get_kpi_value(kpi_type) == db_count
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -49,7 +44,6 @@ def test_tab_table_row_count_matches_kpi(dashboard, tab_name):
     assert table_rows == kpi_value, (
         f"Tab '{tab_name}': table rows={table_rows}, KPI={kpi_value}"
     )
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -88,7 +82,6 @@ def test_vehicle_search_matches_db(dashboard, db_client):
     finally:
         dashboard.clear_vehicle_search()
 
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_filtered_tab_count_matches_db(dashboard, filter_data, db_client):
@@ -111,7 +104,6 @@ def test_filtered_tab_count_matches_db(dashboard, filter_data, db_client):
         assert table_rows == db_count, (
             f"Filtered in_use table rows={table_rows}, DB/KPI={db_count}"
         )
-
 
 @pytest.mark.data
 @pytest.mark.regression

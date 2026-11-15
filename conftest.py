@@ -1,10 +1,9 @@
 import base64
-import json
+import logging
 import re
 from datetime import datetime
 from pathlib import Path
 
-import allure
 import pytest
 from playwright.sync_api import sync_playwright
 
@@ -13,12 +12,9 @@ try:
 except ImportError:  # pragma: no cover
     html_extras = None
 
-from browser_session import ensure_single_tab, install_single_tab_policy
+from browser_session import ensure_single_tab, install_single_tab_policy, save_auth_state
 from config.settings import settings
-from db.client import DatabaseClient
-from pages.fleet_dashboard.main_dashboard_page import MainDashboardPage
 from reports.test_run_report import (
-    ALLURE_RESULTS_DIR,
     HTML_REPORTS_DIR,
     REPORT_DIR,
     RESULTS_DIR,
@@ -28,21 +24,19 @@ from reports.test_run_report import (
     TestRunReport,
     VIDEOS_DIR,
 )
-from tests.helpers.dashboard_fixture import open_report
-
-DATA_DIR = Path(__file__).resolve().parent / "data"
 AUTH_PATH = Path(settings.AUTH_FILE)
 
+# ReportPortal's pytest agent registers a logging handler when --reportportal is on.
+# A module logger keeps normal runs untouched when the agent is absent.
+rp_logger = logging.getLogger(__name__)
 
 def _artifact_stamp() -> str:
     return datetime.now().strftime("%Y%m%d_%H%M%S")
-
 
 def _safe_artifact_name(name: str) -> str:
     cleaned = re.sub(r'[<>:"/\\|?*\[\]{}\']', "_", name)
     cleaned = cleaned.replace(" ", "_")
     return cleaned.strip(" ._")[:120] or "test"
-
 
 def _test_failed(request) -> bool:
     for phase in ("setup", "call"):
@@ -50,7 +44,6 @@ def _test_failed(request) -> bool:
         if report is not None and report.failed:
             return True
     return False
-
 
 def _as_playwright_page(candidate):
     """Return a Playwright Page (or None) from a fixture value or page object."""
@@ -63,7 +56,6 @@ def _as_playwright_page(candidate):
         return inner
     return None
 
-
 def _active_playwright_page(item):
     """Resolve the live Playwright page from the test's fixtures."""
     funcargs = getattr(item, "funcargs", None) or {}
@@ -73,9 +65,69 @@ def _active_playwright_page(item):
             return page
     return None
 
+def _reportportal_enabled(config) -> bool:
+    # True only when the agent is switched on via --reportportal.
+    # Keeps every existing run path untouched when the flag is absent.
+    # pytest-reportportal 5.x stores the CLI flag as option.rp_enabled
+    # (dest of --reportportal); also accept option.reportportal from the contract.
+    try:
+        option = getattr(config, "option", None)
+        return bool(
+            getattr(option, "rp_enabled", False)
+            or getattr(option, "reportportal", False)
+        )
+    except Exception:
+        return False
+
+def _push_screenshot_to_reportportal(
+    config, image_bytes: bytes, name: str = "screenshot"
+) -> None:
+    # Forward the already-captured PNG to the active RP test item.
+    # Never re-capture and never raise: reporting must not change outcomes.
+    try:
+        if not image_bytes or not _reportportal_enabled(config):
+            return
+        rp_logger.error(
+            "Playwright failure screenshot",
+            extra={
+                "attachment": {
+                    "name": name,
+                    "data": image_bytes,
+                    "mime": "image/png",
+                }
+            },
+        )
+    except Exception:
+        # Mirror the existing Allure/trace hooks: swallow reporting errors.
+        pass
+
+def _push_logs_to_reportportal(
+    config, message: str, *, csv_text: str | None = None
+) -> None:
+    # Route captured test log lines to the current RP item via the agent handler.
+    # Optional CSV is attached as a downloadable file so timing/steps are preserved.
+    try:
+        if not _reportportal_enabled(config):
+            return
+        if message:
+            rp_logger.info(message)
+        if csv_text:
+            rp_logger.info(
+                "validation-steps.csv",
+                extra={
+                    "attachment": {
+                        "name": "validation-steps.csv",
+                        "data": csv_text.encode("utf-8-sig"),
+                        "mime": "text/csv",
+                    }
+                },
+            )
+    except Exception:
+        # Swallow like the screenshot/trace hooks so reporting never fails a test.
+        pass
 
 def _attach_failure_screenshot(item, report) -> bool:
-    """Full-page screenshot on UI failure for pytest-html and Allure.
+    """Full-page screenshot on UI failure for pytest-html.
 
     This framework does not use pytest-playwright's ``--screenshot`` CLI flag.
     Capture here in ``pytest_runtest_makereport`` so extras land on the report
@@ -108,51 +160,15 @@ def _attach_failure_screenshot(item, report) -> bool:
             extra.append(html_extras.image(base64_image))
             report.extras = extra
 
-        allure.attach(
-            screenshot_bytes,
-            name="screenshot",
-            attachment_type=allure.attachment_type.PNG,
+        # Reuse the already-captured bytes; the _failure_screenshot_taken
+        # guard below ensures ReportPortal never receives a duplicate.
+        _push_screenshot_to_reportportal(
+            getattr(item, "config", None), screenshot_bytes
         )
         item._failure_screenshot_taken = True
         return True
     except Exception:
         return False
-
-
-def save_auth_state(context) -> None:
-    """Persist cookies/localStorage so the next pytest run stays logged in."""
-    try:
-        context.storage_state(path=str(AUTH_PATH))
-        print(f"\n[auth] Session saved → {AUTH_PATH.resolve()}\n")
-    except Exception as exc:
-        print(f"\n[auth] WARNING: could not save session: {exc}\n")
-
-
-@pytest.fixture(scope="session")
-def db_client():
-    """Read-only SQL Server client for UI-to-DB validation."""
-    return DatabaseClient()
-
-
-@pytest.fixture(scope="session")
-def filter_data():
-    with open(DATA_DIR / "filters.json", encoding="utf-8") as file:
-        return json.load(file)
-
-
-@pytest.fixture(scope="session")
-def filter_matrix():
-    with open(DATA_DIR / "filter_matrix.json", encoding="utf-8") as file:
-        return json.load(file)
-
-
-@pytest.fixture(scope="session")
-def zero_count_filters(db_client, filter_data):
-    combo = db_client.find_zero_count_filters(filter_data)
-    if combo is None:
-        pytest.skip("No zero-count filter combination found in test data")
-    return combo
-
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -162,10 +178,8 @@ def pytest_addoption(parser):
         help="Record a .webm of the full pytest session, including passing tests.",
     )
 
-
 def _want_video(config) -> bool:
     return settings.ENABLE_VIDEO or bool(config.getoption("--video", default=False))
-
 
 def _save_session_video(video, dest: Path) -> Path | None:
     """Finalize Playwright video after the page is closed. Keep previous runs intact."""
@@ -188,10 +202,8 @@ def _save_session_video(video, dest: Path) -> Path | None:
                 pass
     return dest
 
-
 def pytest_configure(config):
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-    ALLURE_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     # One timestamped HTML report per run so a re-run never overwrites the
@@ -202,7 +214,6 @@ def pytest_configure(config):
             HTML_REPORTS_DIR / f"report_{_artifact_stamp()}.html"
         )
 
-
 @pytest.fixture(scope="session")
 def run_report_book():
     """One CSV report file for the entire pytest run."""
@@ -211,7 +222,6 @@ def run_report_book():
     path = book.finalize()
     book.stop_context()
     print(f"\n[report] {path.resolve()}\n")
-
 
 @pytest.fixture(scope="session")
 def video_run_dir(pytestconfig):
@@ -222,7 +232,6 @@ def video_run_dir(pytestconfig):
     path = VIDEOS_DIR / f"run_{_artifact_stamp()}"
     path.mkdir(parents=True, exist_ok=True)
     yield path
-
 
 @pytest.fixture(scope="session")
 def browser_context(video_run_dir):
@@ -264,7 +273,6 @@ def browser_context(video_run_dir):
                     print(f"\n[video] {dest.resolve()}\n")
         browser.close()
 
-
 @pytest.fixture(scope="session")
 def session_page(browser_context, video_run_dir):
     """
@@ -289,11 +297,6 @@ def session_page(browser_context, video_run_dir):
     if dest is None:
         return
     print(f"\n[video] {dest.resolve()}\n")
-    allure.attach.file(
-        str(dest),
-        name="session-video",
-        attachment_type=allure.attachment_type.WEBM,
-    )
 
 
 @pytest.fixture(autouse=True)
@@ -312,14 +315,12 @@ def test_run_report(request, run_report_book):
 
     report.finish(passed=not failed, error=error)
     run_report_book.append_test(report)
-    allure.attach(
-        report.to_csv_text(),
-        name="validation-steps.csv",
-        attachment_type=allure.attachment_type.CSV,
-        extension="csv",
+    csv_text = report.to_csv_text()
+    # Forward timing summary + validation steps. Test bodies never call RP directly.
+    _push_logs_to_reportportal(
+        request.config, report.timing_summary(), csv_text=csv_text
     )
     report.stop_context()
-
 
 def _stop_tracing(browser_context, *, path: str | None = None) -> None:
     """Stop tracing if running; ignore 'not started' errors between tests."""
@@ -330,7 +331,6 @@ def _stop_tracing(browser_context, *, path: str | None = None) -> None:
             browser_context.tracing.stop()
     except Exception:
         pass
-
 
 @pytest.fixture
 def auth_page(session_page, browser_context, request):
@@ -366,10 +366,10 @@ def auth_page(session_page, browser_context, request):
                             extra.append(html_extras.image(base64_image))
                             rep.extras = extra
                             break
-                allure.attach(
-                    screenshot_bytes,
-                    name="screenshot",
-                    attachment_type=allure.attachment_type.PNG,
+                # Setup-phase path: reuse these bytes; skip if the call-phase
+                # guard already marked a screenshot as taken (no RP duplicate).
+                _push_screenshot_to_reportportal(
+                    request.config, screenshot_bytes
                 )
                 request.node._failure_screenshot_taken = True
             except Exception:
@@ -381,23 +381,10 @@ def auth_page(session_page, browser_context, request):
             TRACES_DIR.mkdir(parents=True, exist_ok=True)
             trace_path = str(TRACES_DIR / f"{base_name}.zip")
             _stop_tracing(browser_context, path=trace_path)
-            if Path(trace_path).exists():
-                allure.attach.file(
-                    trace_path,
-                    name="playwright-trace",
-                    attachment_type=allure.attachment_type.ZIP,
-                )
         if settings.PAUSE_ON_FAILURE:
             session_page.pause()
     elif tracing:
         _stop_tracing(browser_context)
-
-
-@pytest.fixture
-def dashboard(auth_page, browser_context):
-    """Reuse the open dashboard on the shared tab (reload only when needed)."""
-    return open_report(MainDashboardPage, auth_page, browser_context)
-
 
 @pytest.hookimpl(tryfirst=True, hookwrapper=True)
 def pytest_runtest_makereport(item, call):

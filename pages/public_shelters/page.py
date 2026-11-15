@@ -8,7 +8,7 @@ from playwright.sync_api import Page
 
 from config.settings import settings
 from core.portal.page import ReportShell
-from tests.helpers.secondary_auth import bypass_secondary_auth
+from pages.secondary_auth import bypass_secondary_auth
 
 
 class PublicSheltersPage(ReportShell):

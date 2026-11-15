@@ -24,9 +24,10 @@ MANDATORY and MUST appear as a task that gates completion.
 
 ## Path Conventions
 
-- **Validation Core**: `core/portal/` (Layer 0), `core/components/` (Layer 2),
-  `pages/<report>/` (domain), `data/` (Layer 3 catalogs),
-  `tests/ui/<report>/` (smoke), `tests/e2e/`, `db/`
+- **Validation Core**: `core/portal/` (Layer 0), `core/components/` (Layer 2
+  visual readers), `pages/<report>/` (domain pages), `data/<report>/` (Layer 3),
+  `tests/ui/<suite>/` (smoke), `tests/e2e/`, `db/connection.py` (generic),
+  `db/clients/<report>.py` (report SQL)
 - **Single project**: `src/`, `tests/` at repository root
 - **Web app**: `backend/src/`, `frontend/src/`
 - **Mobile**: `api/src/`, `ios/src/` or `android/src/`

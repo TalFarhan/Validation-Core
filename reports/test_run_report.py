@@ -11,13 +11,28 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-RESULTS_DIR = Path("results")
+# Local run artifacts only (HTML, CSV, screenshots, traces, videos).
+# ReportPortal is a live server sink and does not write here.
+RESULTS_DIR = Path("result")
 REPORT_DIR = RESULTS_DIR / "run-reports"
 HTML_REPORTS_DIR = RESULTS_DIR / "html-reports"
-ALLURE_RESULTS_DIR = RESULTS_DIR / "allure-results"
 SCREENSHOTS_DIR = RESULTS_DIR / "screenshots"
 TRACES_DIR = RESULTS_DIR / "traces"
 VIDEOS_DIR = RESULTS_DIR / "videos"
+
+# One row per validation step. Timing is repeated so each row is self-contained.
+TEST_CSV_COLUMNS = [
+    "#",
+    "בדיקה",
+    "סטטוס בדיקה",
+    "תאריך התחלה",
+    "תאריך סיום",
+    "משך (שניות)",
+    "מה נבדק / סונן",
+    "שאילתת DB",
+    "פלט",
+    "עבר או נכשל",
+]
 
 _current_report: ContextVar[TestRunReport | None] = ContextVar(
     "current_test_run_report", default=None
@@ -26,14 +41,11 @@ _run_book: ContextVar[RunReportBook | None] = ContextVar(
     "current_run_report_book", default=None
 )
 
-
 def get_current_report() -> TestRunReport | None:
     return _current_report.get()
 
-
 def get_run_book() -> RunReportBook | None:
     return _run_book.get()
-
 
 def _compact(value: Any, *, max_len: int = 800) -> str:
     if isinstance(value, str):
@@ -43,7 +55,6 @@ def _compact(value: Any, *, max_len: int = 800) -> str:
     if len(text) > max_len:
         return text[: max_len - 3] + "..."
     return text
-
 
 def classify_failure(error: str | None) -> str:
     """Label failure cause for CSV / humans."""
@@ -68,7 +79,6 @@ def classify_failure(error: str | None) -> str:
         return "כשל נתונים (UI≠DB)"
     return "שגיאת הרצה"
 
-
 def _short_error(error: str, *, max_len: int = 500) -> str:
     lines = [ln.strip() for ln in error.strip().splitlines() if ln.strip()]
     for line in reversed(lines):
@@ -77,6 +87,15 @@ def _short_error(error: str, *, max_len: int = 500) -> str:
     first = lines[0] if lines else error
     return _compact(first, max_len=max_len)
 
+def _format_timestamp(value: datetime | None) -> str:
+    if value is None:
+        return ""
+    return value.strftime("%Y-%m-%d %H:%M:%S")
+
+def _duration_seconds(started: datetime, finished: datetime | None) -> str:
+    if finished is None:
+        return ""
+    return f"{max(0.0, (finished - started).total_seconds()):.2f}"
 
 def _format_sql(sql: str, params: dict[str, Any] | None) -> str:
     sql_text = _compact(sql, max_len=2000)
@@ -89,14 +108,12 @@ def _format_sql(sql: str, params: dict[str, Any] | None) -> str:
     }
     return f"{sql_text} | פרמטרים: {_compact(relevant, max_len=400)}"
 
-
 @dataclass
 class ReportRow:
     action: str
     query: str
     output: str
     status: str  # עבר / נכשל / - (שלב ביניים)
-
 
 class RunReportBook:
     """One CSV file for the entire pytest session."""
@@ -132,17 +149,7 @@ class RunReportBook:
                 ["התחלת הרצה", self.started_at.strftime("%Y-%m-%d %H:%M:%S")]
             )
             writer.writerow([])
-            writer.writerow(
-                [
-                    "#",
-                    "בדיקה",
-                    "סטטוס בדיקה",
-                    "מה נבדק / סונן",
-                    "שאילתת DB",
-                    "פלט",
-                    "עבר או נכשל",
-                ]
-            )
+            writer.writerow(TEST_CSV_COLUMNS)
 
     def append_test(self, report: TestRunReport) -> None:
         if report.status == "עבר":
@@ -159,6 +166,7 @@ class RunReportBook:
                         self._row_num,
                         report.test_name,
                         report.status,
+                        *report.timing_cells(),
                         row.action,
                         row.query,
                         row.output,
@@ -173,9 +181,12 @@ class RunReportBook:
             writer.writerow([])
             writer.writerow(["שדה", "ערך"])
             writer.writerow(
+                ["סיום הרצה", _format_timestamp(self.finished_at)]
+            )
+            writer.writerow(
                 [
-                    "סיום הרצה",
-                    self.finished_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    "משך הרצה (שניות)",
+                    _duration_seconds(self.started_at, self.finished_at),
                 ]
             )
             writer.writerow(["בדיקות שעברו", self._tests_passed])
@@ -183,28 +194,12 @@ class RunReportBook:
             writer.writerow(
                 ["סה״כ בדיקות", self._tests_passed + self._tests_failed]
             )
-        self._write_allure_environment()
         return self.path
-
-    def _write_allure_environment(self) -> None:
-        """Point the Allure report at the full Hebrew run CSV for this session."""
-        ALLURE_RESULTS_DIR.mkdir(parents=True, exist_ok=True)
-        env_path = ALLURE_RESULTS_DIR / "environment.properties"
-        lines = [
-            f"run.csv={self.path.resolve().as_posix()}",
-            f"run.started={self.started_at.strftime('%Y-%m-%d %H:%M:%S')}",
-        ]
-        if self.finished_at is not None:
-            lines.append(
-                f"run.finished={self.finished_at.strftime('%Y-%m-%d %H:%M:%S')}"
-            )
-        lines.append(f"tests.passed={self._tests_passed}")
-        lines.append(f"tests.failed={self._tests_failed}")
-        env_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
 
 class TestRunReport:
     """Accumulates one row per check for a single test; flushed into the run book."""
+
+    __test__ = False
 
     def __init__(self, test_name: str):
         self.test_name = test_name
@@ -238,6 +233,20 @@ class TestRunReport:
             ReportRow(action=action, query=query, output=output, status=status)
         )
 
+    def timing_cells(self) -> list[str]:
+        return [
+            _format_timestamp(self.started_at),
+            _format_timestamp(self.finished_at),
+            _duration_seconds(self.started_at, self.finished_at),
+        ]
+
+    def timing_summary(self) -> str:
+        started, finished, duration = self.timing_cells()
+        return (
+            f"{self.test_name} | {self.status} | "
+            f"started={started} | finished={finished} | duration_s={duration}"
+        )
+
     def finish(self, *, passed: bool, error: str | None = None) -> None:
         self.finished_at = datetime.now()
         self.status = "עבר" if passed else "נכשל"
@@ -248,26 +257,18 @@ class TestRunReport:
             self.add_row("סיכום בדיקה", self.test_name, self.status)
 
     def to_csv_text(self) -> str:
-        """CSV snippet for this test only — attached to the Allure result."""
+        """CSV snippet for this test only — attached to ReportPortal."""
         buffer = io.StringIO()
         writer = csv.writer(buffer)
-        writer.writerow(
-            [
-                "#",
-                "בדיקה",
-                "סטטוס בדיקה",
-                "מה נבדק / סונן",
-                "שאילתת DB",
-                "פלט",
-                "עבר או נכשל",
-            ]
-        )
+        writer.writerow(TEST_CSV_COLUMNS)
+        timing = self.timing_cells()
         for index, row in enumerate(self.rows, start=1):
             writer.writerow(
                 [
                     index,
                     self.test_name,
                     self.status,
+                    *timing,
                     row.action,
                     row.query,
                     row.output,

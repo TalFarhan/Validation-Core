@@ -1,0 +1,245 @@
+# UI-vs-DB parity contract for the Alerts dashboard.
+# `name` is a stable title anchor and does not include the date-range slicer phrase.
+# `label` is documentation for a confirmed category name. The parity engine ignores it.
+# Category labels (UAV, Rockets, Terrorists) are filled only after the id pairing is confirmed.
+# Gauge metrics are added when the title and maximum query are confirmed.
+# The settlements chart, the map, and the policy status use stub SQL from
+# db/clients/alerts.py. Those statements are executed. A missing database
+# fails the test and is not skipped.
+# The settlements name is the ranking-chart anchor. A neighboring chart that
+# compares the current period with the previous one is not this metric.
+metrics:
+  - name: "אזורי התרעה תחת ירי"
+    visual: kpi
+    category_id: "1"
+    sql_query: >
+      SELECT COUNT(DISTINCT [WarningZoneName])
+      FROM [FACT].[AlertsRedWeb]
+      WHERE AlertDate >= :start_date AND AlertDate < :end_date
+        AND CategoryID = :category_id
+
+  - name: "אזורי התרעה תחת ירי"
+    visual: kpi
+    category_id: "2"
+    sql_query: >
+      SELECT COUNT(DISTINCT [WarningZoneName])
+      FROM [FACT].[AlertsRedWeb]
+      WHERE AlertDate >= :start_date AND AlertDate < :end_date
+        AND CategoryID = :category_id
+
+  - name: "אזורי התרעה תחת ירי"
+    visual: kpi
+    category_id: "10"
+    sql_query: >
+      SELECT COUNT(DISTINCT [WarningZoneName])
+      FROM [FACT].[AlertsRedWeb]
+      WHERE AlertDate >= :start_date AND AlertDate < :end_date
+        AND CategoryID = :category_id
+
+  - name: "אוכלוסייה מותרעת"
+    visual: kpi
+    category_id: "1"
+    sql_query: >
+      SELECT ISNULL(SUM(LesserWarningAreaPopulation), 0)
+      FROM (
+        SELECT LesserWarningAreaID,
+               MAX(LesserWarningAreaPopulation) AS LesserWarningAreaPopulation
+        FROM [FACT].[AlertsRedWeb]
+        WHERE AlertDate >= :start_date AND AlertDate < :end_date
+          AND CategoryID = :category_id
+        GROUP BY LesserWarningAreaID
+      ) A
+
+  - name: "אוכלוסייה מותרעת"
+    visual: kpi
+    category_id: "2"
+    sql_query: >
+      SELECT ISNULL(SUM(LesserWarningAreaPopulation), 0)
+      FROM (
+        SELECT LesserWarningAreaID,
+               MAX(LesserWarningAreaPopulation) AS LesserWarningAreaPopulation
+        FROM [FACT].[AlertsRedWeb]
+        WHERE AlertDate >= :start_date AND AlertDate < :end_date
+          AND CategoryID = :category_id
+        GROUP BY LesserWarningAreaID
+      ) A
+
+  - name: "אוכלוסייה מותרעת"
+    visual: kpi
+    category_id: "10"
+    sql_query: >
+      SELECT ISNULL(SUM(LesserWarningAreaPopulation), 0)
+      FROM (
+        SELECT LesserWarningAreaID,
+               MAX(LesserWarningAreaPopulation) AS LesserWarningAreaPopulation
+        FROM [FACT].[AlertsRedWeb]
+        WHERE AlertDate >= :start_date AND AlertDate < :end_date
+          AND CategoryID = :category_id
+        GROUP BY LesserWarningAreaID
+      ) A
+
+  - name: "עשרת היישובים עם כמות ההתרעות הגבוהה ביותר"
+    visual: chart
+    sql_query: "SELECT 'placeholder' AS category_label, CAST(NULL AS int) AS metric_value"
+
+  - name: "מפת התרעות ביישובים"
+    visual: map
+    sql_query: "SELECT 'placeholder'"
+
+  - name: "סיכון לפי מדיניות התגוננות ברגע"
+    visual: kpi
+    compare: text
+    sql_query: "SELECT 'placeholder'"
+
+  # Threat sections repeat the same three card titles. Scope is the section.
+  # Names stay stable and do not include the date-range slicer phrase.
+  # label documents the confirmed category. The engine ignores it.
+  - name: "היום"
+    scope: "ירי רקטות וטילים"
+    visual: kpi
+    category_id: "1"
+    label: Rockets
+    sql_query: "SELECT 0"
+
+  - name: "אתמול"
+    scope: "ירי רקטות וטילים"
+    visual: kpi
+    category_id: "1"
+    label: Rockets
+    sql_query: "SELECT 0"
+
+  - name: 'סה"כ בטווח שנבחר'
+    scope: "ירי רקטות וטילים"
+    visual: kpi
+    category_id: "1"
+    label: Rockets
+    sql_query: "SELECT 0"
+
+  - name: "היום"
+    scope: "חדירת מחבלים"
+    visual: kpi
+    category_id: "2"
+    label: Terrorists
+    sql_query: "SELECT 0"
+
+  - name: "אתמול"
+    scope: "חדירת מחבלים"
+    visual: kpi
+    category_id: "2"
+    label: Terrorists
+    sql_query: "SELECT 0"
+
+  - name: 'סה"כ בטווח שנבחר'
+    scope: "חדירת מחבלים"
+    visual: kpi
+    category_id: "2"
+    label: Terrorists
+    sql_query: "SELECT 0"
+
+  - name: "היום"
+    scope: "חדירת כלי טיס עוין"
+    visual: kpi
+    category_id: "10"
+    label: UAV
+    sql_query: "SELECT 0"
+
+  - name: "אתמול"
+    scope: "חדירת כלי טיס עוין"
+    visual: kpi
+    category_id: "10"
+    label: UAV
+    sql_query: "SELECT 0"
+
+  - name: 'סה"כ בטווח שנבחר'
+    scope: "חדירת כלי טיס עוין"
+    visual: kpi
+    category_id: "10"
+    label: UAV
+    sql_query: "SELECT 0"
+
+  # Population and warning-area time buckets use the group base as scope.
+  # These cards are general: no category_id. visual stays kpi until a
+  # denominator query is confirmed.
+  - name: "היום"
+    scope: "אוכלוסייה מותרעת"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: "אתמול"
+    scope: "אוכלוסייה מותרעת"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: 'סה"כ בטווח שנבחר'
+    scope: "אוכלוסייה מותרעת"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: "היום"
+    scope: "אזורי התרעה תחת ירי"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: "אתמול"
+    scope: "אזורי התרעה תחת ירי"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: 'סה"כ בטווח שנבחר'
+    scope: "אזורי התרעה תחת ירי"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  # This chart title is static and does not follow the time slicer.
+  # Its SQL returns no rows and does not reference the date window.
+  - name: "עשרת הישובים עם כמות ההתרעות הגבוהה ביותר ביממה הנוכחית והקודמת"
+    visual: chart
+    sql_query: "SELECT CAST(NULL AS nvarchar(200)) AS category_label, CAST(NULL AS int) AS metric_value WHERE 1 = 0"
+
+  # Page 2. Scope is the report page title, not a page-1 section.
+  # Names are stable prefixes: a trailing " בין ..." date suffix is omitted.
+  # The settlement chart title on the live page is longer than "אוכלוסייה לפי יישוב".
+  # Legend order is מותרעת then לא מותרעת.
+  - name: "התרעות לפי מחוז"
+    scope: "ניתוח התרעות"
+    visual: chart
+    sql_query: "SELECT CAST(NULL AS nvarchar(200)) AS category_label, CAST(NULL AS int) AS metric_value WHERE 1 = 0"
+
+  - name: "אוכלוסייה מותרעת לפי יישוב"
+    scope: "ניתוח התרעות"
+    visual: chart
+    series_index: 0
+    label: "מותרעת"
+    sql_query: "SELECT CAST(NULL AS nvarchar(200)) AS category_label, CAST(NULL AS int) AS metric_value WHERE 1 = 0"
+
+  - name: "אוכלוסייה מותרעת לפי יישוב"
+    scope: "ניתוח התרעות"
+    visual: chart
+    series_index: 1
+    label: "לא מותרעת"
+    sql_query: "SELECT CAST(NULL AS nvarchar(200)) AS category_label, CAST(NULL AS int) AS metric_value WHERE 1 = 0"
+
+  - name: 'סה"כ אוכלוסייה'
+    scope: "ניתוח התרעות"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: "אוכלוסייה מותרעת"
+    scope: "ניתוח התרעות"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: "אוכלוסייה לא ממוגנת"
+    scope: "ניתוח התרעות"
+    visual: kpi
+    sql_query: "SELECT 0"
+
+  - name: "גרף התרעות וגם ממוצע לפי שעה"
+    scope: "ניתוח התרעות"
+    visual: chart
+    sql_query: "SELECT CAST(NULL AS nvarchar(200)) AS category_label, CAST(NULL AS int) AS metric_value WHERE 1 = 0"
+
+  - name: "התרעות לפי תאריך"
+    scope: "ניתוח התרעות"
+    visual: chart
+    sql_query: "SELECT CAST(NULL AS nvarchar(200)) AS category_label, CAST(NULL AS int) AS metric_value WHERE 1 = 0"

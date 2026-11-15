@@ -1,9 +1,8 @@
 """Shared `dashboard` fixture body for Layer 0 report suites.
 
-Do not put a `dashboard` fixture in `tests/ui/conftest.py`: that directory
-also contains `fleet_dashboard`, which must keep the root fixture
-(`MainDashboardPage`). Each suite shadows `dashboard` locally by binding
-its page class.
+Each suite that is not the fleet report shadows `dashboard` locally by binding
+its page class. Fleet and e2e register their own `dashboard` fixture. The root
+conftest keeps the browser session only.
 """
 
 from __future__ import annotations
@@ -13,7 +12,7 @@ from typing import TypeVar
 import pytest
 from playwright.sync_api import BrowserContext, Page
 
-from browser_session import ensure_single_tab
+from browser_session import ensure_single_tab, save_auth_state
 from core.portal.page import ReportShell
 
 PageT = TypeVar("PageT", bound=ReportShell)
@@ -25,8 +24,6 @@ def open_report(
     browser_context: BrowserContext,
 ) -> PageT:
     """Open a report on the shared tab, retrying transient portal glitches."""
-    from conftest import save_auth_state
-
     ensure_single_tab(browser_context, auth_page)
     page_obj = page_cls(auth_page)
     was_ready = page_obj._dashboard_ready()
@@ -56,10 +53,14 @@ def open_report(
     return page_obj
 
 
-def bind_dashboard(page_cls: type[PageT]):
-    """Return a `dashboard` fixture that constructs `page_cls` on the shared tab."""
+def bind_dashboard(page_cls: type[PageT], fixture_name: str = "dashboard"):
+    """Return a fixture that constructs `page_cls` on the shared tab.
 
-    @pytest.fixture
+    The default fixture name is ``dashboard``. A second report page in the same
+    suite passes another name so it does not replace the first fixture.
+    """
+
+    @pytest.fixture(name=fixture_name)
     def dashboard(auth_page, browser_context):
         return open_report(page_cls, auth_page, browser_context)
 

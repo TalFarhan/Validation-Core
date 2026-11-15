@@ -3,7 +3,9 @@
 מסגרת pytest + Playwright שמאמתת את דשבורד הצי (Power BI בפורטל) מול מחסן SQL Server:  
 KPI, פילטרים, טאבים, טבלה, גרפים ואינווריאנטים עסקיים.
 
-מיועד לצוותי **Validation / QA**, **BI**, ו**Data** — מקור האמת לכיסוי: [`docs/COVERAGE_CATALOG.md`](docs/COVERAGE_CATALOG.md).
+מיועד לצוותי **Validation / QA**, **BI**, ו**Data**.  
+היכרות מדורגת (מושגים, ספריות, בדיקות גנריות מול YAML, ארכיטקטורה ודשבורדים): [`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md).  
+מקור האמת לכיסוי הצי: [`docs/COVERAGE_CATALOG.md`](docs/COVERAGE_CATALOG.md).
 
 ---
 
@@ -70,39 +72,16 @@ Markers מוגדרים ב-`pytest.ini`: `sanity`, `data`, `regression`.
 
 ## דוחות וארטיפקטים
 
-אחרי כל הרצה נוצרים תחת `results/` (gitignored):
+אחרי כל הרצה נוצרים תחת `result/` (gitignored). ReportPortal אינו כותב לתיקייה הזו.
 
 | פלט | נתיב | למי שימושי |
 |-----|------|------------|
-| HTML | `results/report.html` | מפתחים / QA |
-| CSV בעברית (שלבים UI+SQL) | `results/run-reports/run_*.csv` | BI / ניתוח כשלים |
-| Allure raw | `results/allure-results/` | `allure serve results/allure-results` |
-| צילומי מסך + Playwright trace | `results/screenshots/`, traces ב-Allure | דיבוג כשל |
+| HTML | `result/html-reports/report_*.html` | מפתחים / QA |
+| CSV בעברית (שלבים UI+SQL) | `result/run-reports/run_*.csv` | BI / ניתוח כשלים |
+| צילומי מסך + Playwright trace | `result/screenshots/`, `result/traces/` | דיבוג כשל |
 
-ה-CSV הוא הדוח העסקי העיקרי: פעולה, שאילתה, פלט, סטטוס עבר/נכשל.  
-ב-Allure מצורף `validation-steps.csv` לכל טסט (שלבים של אותה בדיקה). נתיב ה-CSV המלא של הריצה נרשם ב-`environment.properties` בתוך `allure-results`.
-
-### Allure (מקומי)
-
-הפלאגין `allure-pytest` רץ אוטומטית (`--alluredir` ב-`pytest.ini`). אחרי הרצה:
-
-```powershell
-# התקנת Allure CLI (פעם אחת) — Scoop / Chocolatey / הורדה מ-GitHub
-# scoop install allure
-# או: choco install allure-commandline
-
-allure serve results/allure-results
-```
-
-בדוח תראו:
-
-1. **Behaviors** — Epic `Fleet Dashboard Validation` ← Features (KPI / Filters / Charts / …)
-2. **Steps** — ניווט, פילטרים, שאילתות DB, hover על גרפים
-3. **Attachments** — צילום מסך + Playwright trace בכישלון, ו-CSV של שלבי הוולידציה
-
-קטלוג התגיות: `reports/allure_catalog.py`.
-
-> **CI:** עדיין לא מוטמע. אחרי שהדוח המקומי יציב — `allure generate` + שמירת HTML כ-Artifact.
+ה-CSV הוא הדוח העסקי העיקרי לכל בדיקה: שם, סטטוס, תאריך התחלה, תאריך סיום, משך בשניות, פעולה, שאילתה, פלט, עבר/נכשל.  
+ב-ReportPortal (עם `--reportportal`) מופיעים סיכום תזמון + אותו קובץ CSV כקובץ מצורף.
 
 ---
 
@@ -111,16 +90,17 @@ allure serve results/allure-results
 ```
 config/settings.py          # הגדרות מ-.env
 core/portal/                # Layer 0 — ReportShell (SSO, קטלוג, iframe, timeouts, last-refresh)
-core/components/            # Layer 2 — Slicer גנרי (dropdown / checkbox / search / clear)
-db/                         # לקוח SQL לקריאה בלבד
-pages/fleet_dashboard/      # Page Object של דשבורד הצי (ירושה/הרכבה של ReportShell)
+core/components/            # Layer 2 — קוראי ויזואל גנריים (slicer, KPI, gauge, chart)
+db/connection.py            # מפעל חיבור גנרי
+db/clients/                 # SQL לקריאה בלבד, קובץ לכל דוח
+pages/<report>/             # Page Object של כל דוח (צי: pages/fleet_dashboard/)
+pages/secondary_auth.py     # התחברות ArcGIS משותפת, מחוץ ל-core
 tests/ui/                   # sanity / smoke
 tests/e2e/                  # רגרסיה UI↔DB
-tests/helpers/              # assert משותפים
-data/filters.json           # Layer 3 — ערכי פילטר לדוגמה
-data/filter_matrix.json     # Layer 3 — תרחישי מטריצה
+tests/helpers/              # מנוע parity ופתיחת דשבורד בלבד
+data/fleet/                 # Layer 3 — קטלוג ומטריצת פילטרים של הצי
+data/alerts/                # Layer 3 — חוזה מידות של התרעות
 reports/test_run_report.py  # כתיבת CSV לריצה
-reports/allure_catalog.py   # Epic / Feature labels ל-Allure
 docs/COVERAGE_CATALOG.md    # קטלוג KPI ↔ DB ↔ טסטים
 .specify/memory/constitution.md  # עקרונות שכבות, אי-דליפת דומיין, חוזה הטסטים
 ```
@@ -130,10 +110,11 @@ docs/COVERAGE_CATALOG.md    # קטלוג KPI ↔ DB ↔ טסטים
 | שכבה | מיקום | מה מותר |
 |------|--------|---------|
 | Layer 0 | `core/portal/` (`ReportShell`) | התחברות/SSO, חיפוש קטלוג, המתנה ל-iframe, timeout לטעינת ויזואל, בדיקת עדכניות אחרונה |
-| Layer 1 / Domain | `pages/<report>/` | KPI, שמות פילטרים של הדוח, טאבים, טבלאות, גרפים — לדוגמה צי (`vehicles`, `district`) |
-| Layer 2 | `core/components/` (`Slicer`) | אינטראקציה גנרית עם סלייסר Power BI (dropdown, checkbox, search, clear-all) |
-| Layer 3 | `data/filters.json`, `data/filter_matrix.json` | קטלוג ערכים ומטריצת תרחישים (מה לבחור). `core/` לא טוען את הקבצים |
-| Warehouse | `db/` | שאילתות קריאה בלבד; לא חלק מ-Layer 0/2 |
+| Layer 1 / Domain | `pages/<report>/` | אובייקטי עמוד. צי: `pages/fleet_dashboard/` |
+| Layer 2 | `core/components/` | קוראים גנריים ל-slicer, KPI, gauge ו-chart |
+| Layer 3 | `data/<report>/` | `data/fleet/filters.json`, `data/fleet/filter_matrix.json`, `data/alerts/alerts_contract.yaml` |
+| Warehouse | `db/connection.py`, `db/clients/<report>.py` | מפעל חיבור גנרי; SQL של דוח נשאר לקריאה בלבד |
+| Helpers | `tests/helpers/` | מנוע parity ופתיחת דשבורד בלבד |
 
 `ReportShell` ו-`Slicer` חייבים להישאר גנריים: אסור שידלוף אליהם לוגיקה של דשבורד ספציפי.
 אחרי שינוי ב-Layer 0 או Layer 2, `pytest` על `tests/ui/fleet_dashboard/` חייב לעבור ב-100%.
@@ -163,7 +144,7 @@ R = Responsible, A = Accountable לעדכון הריפו, C = Consulted.
 
 ### מה עדיין חסר להטמעה מלאה ב-CI
 
-- Pipeline (GitHub Actions / Azure DevOps) עם `allure generate` + העלאת HTML + CSV
+- Pipeline (GitHub Actions / Azure DevOps) עם העלאת HTML + CSV
 - אסטרטגיית auth לא-אינטראקטיבית מוסכמת
 - יעד פרסום קבוע לדוחות (SharePoint / blob / pages)
 
@@ -176,7 +157,7 @@ R = Responsible, A = Accountable לעדכון הריפו, C = Consulted.
 | כשל חיבור ל-DB | ODBC 17 מותקן? `DB_SERVER` / הרשאות Windows ל-SQL? |
 | KPI `allocated` / `withdrawn` לא תואמים UI | ודא שיובאו FACT דרך `python db.py`; בדוק פילטרים (Unit/Category/Source חלים גם על FACT) |
 | Timeout על iframe / KPI | הגדל `DEFAULT_TIMEOUT`; ודא שהסשן ב-`auth_state.json` עדיין תקף |
-| ערכי פילטר לא נמצאים | עדכן `data/filters.json` לפי הנתונים בסביבה |
+| ערכי פילטר לא נמצאים | עדכן `data/fleet/filters.json` לפי הנתונים בסביבה |
 | SubUnit לא מופיע | בחר קודם `district` מתאים (cascading) |
 
 ---

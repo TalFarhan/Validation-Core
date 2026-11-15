@@ -51,10 +51,10 @@
 - **Test contract**: After Layer 0, Layer 2, or page-object navigation changes, fleet
   smoke tests (`tests/ui/fleet_dashboard/`) MUST pass at 100% via `pytest`.
 - **Extract shared only**: Generic last-refresh verification MAY live in
-  Layer 0. Power BI slicer chrome MAY live in Layer 2
-  (`core/components/`). Do not genericize KPI cards, tabs, charts, tables,
-  or drilldown until a second report requires them. Domain filter names
-  and catalogs stay outside `core/`.
+  Layer 0. Generic visual readers (slicer chrome, KPI value and scale, gauge
+  scale, chart categories) MAY live in Layer 2 (`core/components/`). Report
+  tables, tooltips, and drilldowns stay on the domain page. Domain filter
+  names and catalogs stay outside `core/`.
 - **Warehouse truth**: E2E assertions remain UI vs SQL through the read-only
   `db` client. Layer 0 MUST NOT embed business SQL.
 - **Observability**: Allure steps, CSV UI logs, screenshots, and traces MUST
@@ -85,12 +85,13 @@ specs/[###-feature]/
 ```text
 # Validation Core (this repository) — prefer this layout when planning here:
 # core/portal/          # Layer 0 ReportShell (generic portal / SSO / iframe)
-# core/components/      # Layer 2 Slicer (dropdown / checkbox / search / clear-all)
+# core/components/      # Layer 2 visual readers (slicer, KPI, gauge, chart)
 # pages/<report>/       # Domain page objects (fleet: pages/fleet_dashboard/)
-# tests/ui/<report>/    # Smoke / sanity (test contract for Layer 0 / Layer 2)
+# tests/ui/<suite>/     # Smoke / sanity (test contract for Layer 0 / Layer 2)
 # tests/e2e/            # UI↔DB regression
-# data/                 # Layer 3 filter catalogs and matrices
-# db/                   # Read-only warehouse client
+# data/<report>/        # Layer 3 catalogs (fleet JSON, alerts contract)
+# db/connection.py      # Generic engine factory
+# db/clients/<report>.py  # Report SQL, read-only
 # config/               # Settings from .env
 
 # [REMOVE IF UNUSED] Option 1: Single project (DEFAULT)

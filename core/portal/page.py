@@ -4,16 +4,14 @@ import re
 import time
 from datetime import datetime, timedelta
 
-import allure
 from playwright.sync_api import Locator, Page, expect
 from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
 from browser_session import ensure_single_tab, wait_for_auth_popups_to_finish
 from config.settings import settings
-from pages.base_page import BasePage
-from pages.errors import LoadTimeoutError
+from core.base_page import BasePage
+from core.errors import LoadTimeoutError
 from reports.test_run_report import get_current_report
-
 
 _LAST_REFRESH_PHRASE = "הדשבורד עודכן לאחרונה ב:"
 _LAST_REFRESH_DATETIME_TOKEN = re.compile(
@@ -38,7 +36,6 @@ _LAST_REFRESH_FORMATS = (
     "%Y-%m-%d",
 )
 
-
 def _parse_last_refresh_datetime(raw: str) -> datetime | None:
     """Parse a last-refresh timestamp from captured caption text."""
     candidate = re.sub(r"\s+", " ", (raw or "").strip())
@@ -56,7 +53,6 @@ def _parse_last_refresh_datetime(raw: str) -> datetime | None:
             except ValueError:
                 continue
     return None
-
 
 class ReportShell(BasePage):
     """Layer 0 host. Domain pages override ready-state and post-navigate hooks."""
@@ -567,7 +563,6 @@ class ReportShell(BasePage):
         """Alias for ``_dashboard_ready`` (iframe + domain ready locator)."""
         return self._dashboard_ready()
 
-    @allure.step("Navigate to report")
     def navigate(self, *, force_reload: bool = False) -> None:
         if not force_reload and self._dashboard_ready():
             via = "reuse_open"
@@ -635,7 +630,6 @@ class ReportShell(BasePage):
                 f"(search_term={self._catalog_search_term()!r})"
             )
 
-    @allure.step("Reload report and measure time until ready")
     def reload_and_measure_ready_ms(self) -> int:
         """
         Hard-reload the already-authenticated report and return elapsed ms
@@ -672,7 +666,6 @@ class ReportShell(BasePage):
             steps_ms=[elapsed_ms],
         )
 
-    @allure.step("Verify report last-refresh freshness")
     def verify_freshness(self, max_hours: int = 24) -> None:
         """Assert the report last-refresh caption is within ``max_hours``.
 
@@ -706,8 +699,8 @@ class ReportShell(BasePage):
         now = datetime.now()
         age = now - parsed
         limit = timedelta(hours=max_hours)
-        with allure.step(f"Dashboard last updated at: {extracted_date_string}"):
-            assert age <= limit, (
-                f"Report last-refresh is older than {max_hours} hours: "
-                f"parsed={parsed.isoformat()}, age={age}, now={now.isoformat()}."
-            )
+        print(f"\n---> EXTRACTED DASHBOARD DATE: {extracted_date_string} <---\n")
+        assert age <= limit, (
+            f"Report last-refresh is older than {max_hours} hours: "
+            f"parsed={parsed.isoformat()}, age={age}, now={now.isoformat()}."
+        )

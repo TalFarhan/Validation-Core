@@ -35,3 +35,7 @@ Thumbs.db
 Dockerfile
 docker-compose.yml
 .dockerignore
+
+# Tooling caches that must not enter the image context.
+node_modules/
+coverage/

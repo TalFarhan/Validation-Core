@@ -1,14 +1,25 @@
 import re
 import time
 
-import allure
 from playwright.sync_api import Page, expect
 
 from config.settings import settings
 from core.components.slicer import Slicer, SlicerDefinition
+from core.components.visual_table import VisualTable, rows_to_label_values
+from core.errors import LoadTimeoutError
 from core.portal.page import ReportShell
-from pages.errors import ExpandHierarchyUnavailable, LoadTimeoutError
 from reports.test_run_report import get_current_report
+
+
+class ExpandHierarchyUnavailable(AssertionError):
+    """הסתעפות missing, disabled, or click did not change the visual."""
+
+    def __init__(self, chart_key: str, reason: str):
+        super().__init__(
+            f"הסתעפות unavailable on chart '{chart_key}': {reason}"
+        )
+        self.chart_key = chart_key
+        self.reason = reason
 
 
 class MainDashboardPage(ReportShell):
@@ -164,11 +175,9 @@ class MainDashboardPage(ReportShell):
     def after_navigate(self) -> None:
         self.reset_dashboard_filters()
 
-    @allure.step("Navigate to Fleet Dashboard")
     def navigate(self, *, force_reload: bool = False) -> None:
         super().navigate(force_reload=force_reload)
 
-    @allure.step("Reload dashboard and measure time until KPI ready")
     def reload_and_measure_ready_ms(self) -> int:
         return super().reload_and_measure_ready_ms()
 
@@ -244,23 +253,18 @@ class MainDashboardPage(ReportShell):
             return True
         return False
 
-    @allure.step("Select district filter: {district_name}")
     def select_district(self, district_name: str) -> None:
         self._slicer.select("district", district_name)
 
-    @allure.step("Select sub-unit filter: {sub_unit_name}")
     def select_sub_unit(self, sub_unit_name: str) -> None:
         self._slicer.select("sub_unit", sub_unit_name)
 
-    @allure.step("Select source filter: {source_name}")
     def select_source(self, source_name: str) -> None:
         self._slicer.select("source", source_name)
 
-    @allure.step("Select category filter: {category_name}")
     def select_category(self, category_name: str) -> None:
         self._slicer.select("category", category_name)
 
-    @allure.step("Click tab: {tab_name}")
     def click_tab(self, tab_name: str) -> None:
         if tab_name not in self._tab_map:
             raise ValueError(f"Targeted navigation tab is invalid: {tab_name}")
@@ -291,7 +295,6 @@ class MainDashboardPage(ReportShell):
             card, previous_value, required=required, timeout_ms=timeout_ms
         )
 
-    @allure.step("Reset dashboard filters to baseline")
     def reset_dashboard_filters(self) -> None:
         """Clear slicers and vehicle search so shared-session tests start clean."""
         try:
@@ -306,14 +309,12 @@ class MainDashboardPage(ReportShell):
         if report is not None:
             report.log_ui("Reset dashboard filters to baseline")
 
-    @allure.step("Clear all applied filters")
     def clear_all_applied_filters(self) -> None:
         self._slicer.clear_all()
         report = get_current_report()
         if report is not None:
             report.log_ui("Cleared all applied filters")
 
-    @allure.step("Apply filters on dashboard")
     def apply_filters(
         self,
         *,
@@ -334,7 +335,6 @@ class MainDashboardPage(ReportShell):
         }
         self._slicer.apply(selections)
 
-    @allure.step("Select table tab: {tab_name}")
     def select_tab(self, tab_name: str) -> None:
         # Tab labels are Power BI <span class="textRun"> nodes — they never get
         # selected/active classes. Wait for the grid to reflect the bookmark.
@@ -353,7 +353,6 @@ class MainDashboardPage(ReportShell):
         row_count = rows.count()
         return max(0, row_count - 1)
 
-    @allure.step("Search vehicle table for: {query}")
     def search_vehicle(self, query: str) -> None:
         self._slicer.search("search", query)
 
@@ -377,7 +376,6 @@ class MainDashboardPage(ReportShell):
             )
         return (rows.nth(data_index).inner_text() or "").strip()
 
-    @allure.step("Click vehicle table row index={index}")
     def click_table_row(self, index: int = 0) -> str:
         """
         Click a matrix/table data row to trigger Power BI cross-filtering.
@@ -585,7 +583,6 @@ class MainDashboardPage(ReportShell):
                 continue
         return tips.last
 
-    @allure.step("Assert chart visible: {chart_key}")
     def assert_chart_visible(self, chart_key: str) -> None:
         expect(self._chart_title_locator(chart_key)).to_be_visible(timeout=self.timeout)
 
@@ -726,7 +723,6 @@ class MainDashboardPage(ReportShell):
                 if box and box["width"] >= 3 and box["height"] >= 3:
                     yield parent
 
-
     def _hover_plot_position(self, chart_key: str, x_ratio: float, y_ratio: float) -> None:
         plot = self.chart_plot(chart_key)
         plot.wait_for(state="visible", timeout=min(10000, self.timeout))
@@ -748,7 +744,7 @@ class MainDashboardPage(ReportShell):
         for shape in self._iter_chart_shapes(chart_key, max_shapes=max_shapes):
             try:
                 self._hover_element_center(shape)
-                deadline = time.monotonic() + 1.0
+                deadline = time.monotonic() + self._hover_attempt_s(weight=0.5)
                 while time.monotonic() < deadline:
                     if not self._tooltip_is_visible():
                         time.sleep(0.08)
@@ -792,7 +788,84 @@ class MainDashboardPage(ReportShell):
             .first
         )
 
-    @allure.step("Hover chart '{chart_key}' segment '{label}'")
+    def _hover_budget_s(self) -> float:
+        """Overall per-segment hover/tooltip budget in seconds.
+
+        Derived from ``self.timeout`` (milliseconds) so slow report renders get
+        proportionally more time to open a tooltip, bounded so a stuck hover can
+        never wedge the suite indefinitely.
+        """
+        return max(20.0, min(self.timeout / 2000.0, 60.0))
+
+    def _hover_attempt_s(self, weight: float = 1.0) -> float:
+        """Per-attempt tooltip-detection window in seconds.
+
+        Scaled from ``self.timeout`` instead of a fixed literal; ``weight`` tunes
+        how long a single hover/click target is polled before moving on.
+        """
+        base = max(0.6, min(self.timeout / 60000.0, 2.0))
+        return max(0.3, base * weight)
+
+    def _pin_segment_tooltip(
+        self,
+        chart_key: str,
+        label: str,
+        expected_value: int | None = None,
+    ) -> str | None:
+        """Click a segment glyph to pin a persistent tooltip; return its text.
+
+        Power BI hover hit-testing frequently fails to open a tooltip on SVG
+        bars/slices. A click selects the data point and opens a tooltip that stays
+        put, which is more reliable than hovering empty plot whitespace. Returns
+        the matched tooltip text when one opens, otherwise None so the caller
+        decides whether to raise.
+        """
+
+        def _accept(text: str) -> str | None:
+            if not text:
+                return None
+            normalized = text.replace("\u200f", "").replace(",", "")
+            if label in normalized:
+                return text
+            if expected_value is not None and str(expected_value) in normalized:
+                return text
+            return None
+
+        # Prefer the label's own glyph, then its axis/legend node. Pie slices
+        # rarely expose the bare name in their <title>, so also click the largest
+        # data glyphs and accept a tooltip that carries the expected value.
+        targets = list(self._shapes_for_segment_label(chart_key, label))
+        label_target = self._segment_label_target(chart_key, label)
+        if label_target is not None:
+            targets.append(label_target)
+        targets.extend(
+            self._iter_chart_shapes(chart_key, max_shapes=12, largest_first=True)
+        )
+
+        attempt_s = self._hover_attempt_s(weight=2.0)
+        for target in targets:
+            try:
+                target.scroll_into_view_if_needed(timeout=2000)
+            except Exception:
+                pass
+            try:
+                target.click(force=True, timeout=3000)
+            except Exception:
+                continue
+            deadline = time.monotonic() + attempt_s
+            while time.monotonic() < deadline:
+                matched = _accept(self._read_visible_tooltip_text())
+                if matched is not None:
+                    return matched
+                time.sleep(0.08)
+            # Clear the selection/tooltip before trying the next glyph so the
+            # overlays do not stack and mask the next match.
+            try:
+                self.dismiss_tooltip()
+            except Exception:
+                pass
+        return None
+
     def hover_chart_segment(
         self,
         chart_key: str,
@@ -818,7 +891,9 @@ class MainDashboardPage(ReportShell):
         section.scroll_into_view_if_needed()
         # Avoid clicking the plot first — a selection can suppress hover tooltips.
 
-        overall_deadline = time.monotonic() + 20.0
+        # Overall budget scales with self.timeout so slow renders get more room.
+        hover_budget_s = self._hover_budget_s()
+        overall_deadline = time.monotonic() + hover_budget_s
 
         def _matched_tooltip() -> str | None:
             text = self._read_visible_tooltip_text()
@@ -875,7 +950,7 @@ class MainDashboardPage(ReportShell):
         for graphic in self._shapes_for_segment_label(chart_key, label):
             if time.monotonic() >= overall_deadline:
                 break
-            matched = _hover_until_match(graphic, 1.2)
+            matched = _hover_until_match(graphic, self._hover_attempt_s(weight=0.6))
             if matched is not None:
                 return matched
 
@@ -885,7 +960,7 @@ class MainDashboardPage(ReportShell):
         ):
             if time.monotonic() >= overall_deadline:
                 break
-            matched = _hover_until_match(shape, 0.7)
+            matched = _hover_until_match(shape, self._hover_attempt_s(weight=0.35))
             if matched is not None:
                 return matched
 
@@ -902,7 +977,7 @@ class MainDashboardPage(ReportShell):
         except Exception:
             section_box = None
         if box is not None and time.monotonic() < overall_deadline:
-            matched = _hover_until_match(target, 0.8)
+            matched = _hover_until_match(target, self._hover_attempt_s(weight=0.4))
             if matched is not None:
                 return matched
             hover_points = [
@@ -951,12 +1026,18 @@ class MainDashboardPage(ReportShell):
                 except Exception:
                     continue
 
+        # 5) Click-to-pin fallback — a hover never opened a tooltip, so click the
+        #    segment glyph to pin a persistent one before giving up.
+        if time.monotonic() < overall_deadline:
+            pinned = self._pin_segment_tooltip(chart_key, label, expected_value)
+            if pinned is not None:
+                return pinned
+
         raise LoadTimeoutError(
             f"chart tooltip for segment '{label}' on '{chart_key}'",
-            steps_ms=[20000],
+            steps_ms=[int(hover_budget_s * 1000)],
         )
 
-    @allure.step("Hover chart: {chart_key}")
     def hover_chart(
         self,
         chart_key: str,
@@ -1120,7 +1201,6 @@ class MainDashboardPage(ReportShell):
             i += 1
         return entries
 
-    @allure.step("Assert chart tooltip is visible")
     def assert_tooltip_visible(self) -> None:
         # Do not use expect(locator) on .last — Power BI leaves hidden
         # tooltip-content-container nodes in the DOM; poll for a non-empty one.
@@ -1135,7 +1215,6 @@ class MainDashboardPage(ReportShell):
             steps_ms=[min(8000, self.timeout)],
         )
 
-    @allure.step("Assert chart tooltip is hidden")
     def assert_tooltip_hidden(self) -> None:
         # Match dismiss semantics: only a non-empty visible tooltip counts.
         deadline = time.monotonic() + min(8.0, self.timeout / 1000)
@@ -1157,7 +1236,6 @@ class MainDashboardPage(ReportShell):
             f"Tooltip missing {missing}. Full tooltip text:\n{text}"
         )
 
-    @allure.step("Dismiss chart tooltip")
     def dismiss_tooltip(self) -> None:
         """Close Power BI tooltip via Escape + move pointer off the visual."""
         try:
@@ -1605,7 +1683,6 @@ class MainDashboardPage(ReportShell):
         except Exception:
             return False
 
-    @allure.step("Assert drilldown (הסתעפות) available on chart '{chart_key}'")
     def assert_expand_hierarchy_visible(
         self,
         chart_key: str,
@@ -1650,7 +1727,6 @@ class MainDashboardPage(ReportShell):
                     pass
         return "absent"
 
-    @allure.step("Expand chart hierarchy one level: {chart_key}")
     def expand_chart_hierarchy(
         self,
         chart_key: str,
@@ -1759,7 +1835,6 @@ class MainDashboardPage(ReportShell):
                     continue
         return None
 
-    @allure.step("Drill up / כינוס on chart '{chart_key}'")
     def drill_up_chart(self, chart_key: str) -> list[str]:
         """
         Collapse one hierarchy level (opposite of הסתעפות).
@@ -1807,7 +1882,6 @@ class MainDashboardPage(ReportShell):
         self.wait_for_chart_labels_change(chart_key, before, required=True)
         return self.get_chart_segment_labels(chart_key)
 
-    @allure.step("Reset chart '{chart_key}' to top hierarchy level")
     def reset_chart_hierarchy(self, chart_key: str, *, max_levels: int = 4) -> None:
         """Drill up via header while enabled; no-op when control is absent."""
         self.assert_chart_visible(chart_key)
@@ -1826,22 +1900,33 @@ class MainDashboardPage(ReportShell):
                 return
             self.wait_for_chart_labels_change(chart_key, before, required=False)
 
+    def read_chart_segments(self, chart_key: str) -> dict[str, int]:
+        """Read one chart's category labels and counts from Show as a table.
+
+        Hierarchy polling keeps using the canvas label list. This method is
+        the extraction path for golden counts.
+        """
+        if chart_key not in self._CHART_TITLES:
+            raise ValueError(f"Unknown chart key: {chart_key}")
+        self.assert_chart_visible(chart_key)
+        self.dismiss_tooltip()
+        rows = VisualTable(
+            self.page, self.dashboard, timeout_ms=self.timeout
+        ).read_rows(self.chart_section(chart_key), name=chart_key)
+        return rows_to_label_values(rows, skip_labels=('סה"כ',))
+
     def get_chart_segment_labels(self, chart_key: str) -> list[str]:
         """Collect category / segment labels currently rendered on a chart."""
         section = self.chart_section(chart_key)
+        try:
+            section.locator("svg text, .legend text").first.wait_for(state="visible", timeout=4000)
+        except Exception:
+            pass
         labels: list[str] = []
         seen: set[str] = set()
 
-        def _add(raw: str | None) -> None:
-            text = (raw or "").strip().replace("\u200f", "")
-            if not text:
-                return
-            # Power BI sometimes concatenates the same tick twice: מחוז דןמחוז דן
-            if len(text) >= 4 and len(text) % 2 == 0:
-                half = len(text) // 2
-                if text[:half] == text[half:]:
-                    text = text[:half]
-            if text in seen:
+        def _add_candidate(text: str) -> None:
+            if not text or text in seen:
                 return
             # Skip pure numbers / measure chrome / pie data labels like "3 (50.0%)".
             if re.fullmatch(r"-?\d[\d,.]*%?", text):
@@ -1855,6 +1940,25 @@ class MainDashboardPage(ReportShell):
                 return
             seen.add(text)
             labels.append(text)
+
+        def _add(raw: str | None) -> None:
+            text = (raw or "").strip().replace("\u200f", "")
+            if not text:
+                return
+            # Power BI sometimes concatenates the same tick twice: מחוז דןמחוז דן
+            if len(text) >= 4 and len(text) % 2 == 0:
+                half = len(text) // 2
+                if text[:half] == text[half:]:
+                    text = text[:half]
+            # Pie/segment titles often read "name 3 (50%)" or "name 3". Expose the
+            # bare category name as well so it can fold to a golden key, while the
+            # measure/percent chrome is still dropped by _add_candidate below.
+            name_only = re.sub(
+                r"\s+-?\d[\d,.]*\s*(?:\(\s*\d+(?:[.,]\d+)?\s*%\s*\))?$", "", text
+            ).strip()
+            _add_candidate(text)
+            if name_only and name_only != text:
+                _add_candidate(name_only)
 
         # SVG <title> often holds clean names — but pie charts put "3 (50%)"
         # there, so always also harvest axis / legend text nodes.
@@ -1922,7 +2026,6 @@ class MainDashboardPage(ReportShell):
             )
         return current
 
-    @allure.step("Expand hierarchy via tooltip הסתעפות on chart '{chart_key}'")
     def expand_via_tooltip_drilldown(
         self,
         chart_key: str,

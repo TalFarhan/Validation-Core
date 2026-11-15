@@ -1,8 +1,7 @@
 import pytest
 
-from reports.allure_catalog import FEATURE_KPI_ACCURACY, suite_marks
 from reports.test_run_report import get_current_report
-from tests.helpers.dashboard_validation import (
+from tests.ui.fleet_dashboard.dashboard_validation import (
     DISTRICT_KEYS,
     KPI_TYPES,
     assert_all_kpis_match_db,
@@ -11,15 +10,11 @@ from tests.helpers.dashboard_validation import (
     db_filter_kwargs,
 )
 
-pytestmark = suite_marks(feature=FEATURE_KPI_ACCURACY)
-
-
 @pytest.mark.data
 @pytest.mark.regression
 def test_dashboard_kpi_baseline_matches_db(dashboard, db_client):
     """Validates unfiltered KPI cards against the warehouse."""
     assert_all_kpis_match_db(dashboard, db_client)
-
 
 @pytest.mark.data
 @pytest.mark.regression
@@ -30,7 +25,6 @@ def test_district_kpi_matches_db(dashboard, filter_data, db_client, district_key
     district = filter_data["districts"][district_key]
     dashboard.select_district(district)
     assert_kpi_matches_db(dashboard, db_client, kpi_type, district=district)
-
 
 @pytest.mark.data
 @pytest.mark.regression
