@@ -58,27 +58,51 @@ _SCROLL_JS = """(el, mode) => {
     }
     if (mode === 'x-start') {
         for (const node of family) {
+            node.removeAttribute('data-vc-xdir');
             if (extraOf(node) > 1) node.scrollLeft = 0;
         }
         return true;
     }
     if (mode === 'x') {
         const ordered = family
-            .filter((node) => extraOf(node) > 1)
-            .sort((a, b) => extraOf(a) - extraOf(b));
+            .filter((node) => extraOf(node) > 1 && overflowScrolls(node))
+            .sort((a, b) => extraOf(b) - extraOf(a));
+        if (best && ordered.indexOf(best) > 0) {
+            ordered.splice(ordered.indexOf(best), 1);
+            ordered.unshift(best);
+        }
         for (const node of ordered) {
             const before = node.scrollLeft;
-            const step = Math.max(60, Math.floor(node.clientWidth * 0.45));
-            node.scrollLeft = before - step;
-            if (node.scrollLeft !== before) return true;
-            node.scrollLeft = before + step;
-            if (node.scrollLeft !== before) return true;
+            const step = Math.max(80, Math.floor(node.clientWidth * 0.55));
+            const stored = Number(node.getAttribute('data-vc-xdir') || '0');
+            const deltas = stored === 0 ? [step, -step] : [stored * step];
+            for (const delta of deltas) {
+                node.scrollLeft = before + delta;
+                if (node.scrollLeft !== before) {
+                    const sign = Math.sign(node.scrollLeft - before) || Math.sign(delta);
+                    node.setAttribute('data-vc-xdir', String(sign));
+                    return true;
+                }
+            }
         }
         return false;
     }
-    const before = best.scrollTop;
-    best.scrollTop = Math.min(before + best.clientHeight, best.scrollHeight);
-    return best.scrollTop !== before;
+    const tryVertical = (node) => {
+        if (!node) return false;
+        const before = node.scrollTop;
+        const gap = node.scrollHeight - node.clientHeight;
+        if (gap <= 1) return false;
+        node.scrollTop = Math.min(before + node.clientHeight, node.scrollHeight);
+        return node.scrollTop !== before;
+    };
+    if (tryVertical(best)) return true;
+    const ordered = family
+        .filter((node) => node !== best && extraOf(node) > 1)
+        .sort((a, b) => extraOf(b) - extraOf(a));
+    for (const node of ordered) {
+        if (tryVertical(node)) return true;
+    }
+    return false;
 }"""
 
 
@@ -139,9 +163,9 @@ def collect_virtualized_rows(
 
     Starts at the top of the scroll container. Each pass stores the visible
     rows, then moves ``scrollTop`` forward by the container height. After a
-    move, wait for animation frames until a new id appears. Stop when the
-    scroll does not move, when those frames show no new id, or when
-    ``timeout_ms`` elapses.
+    move, wait for animation frames and store whatever is painted. Stop when
+    ``scrollTop`` cannot increase, or when ``timeout_ms`` elapses. A viewport
+    that adds no new row id does not end the walk while ``scrollTop`` still moves.
     """
     found: dict[str, dict[str, str]] = {}
     deadline = time.monotonic() + max(timeout_ms, 0) / 1000
@@ -154,25 +178,16 @@ def collect_virtualized_rows(
         return _store(found, rows, row_id)
 
     def sweep_horizontal() -> int:
-        """Read every horizontal page at the current vertical position."""
+        """Read every horizontal page. Stop only when scrollLeft stops moving."""
         gained = 0
         _scroll(grid, "x-start")
         _wait_for_paint(grid)
         gained += absorb()
-        for _ in range(8):
+        for _ in range(30):
             if time.monotonic() >= deadline or not _scroll(grid, "x"):
                 break
-            revealed = False
-            paint_deadline = min(deadline, time.monotonic() + 1.0)
-            while time.monotonic() < paint_deadline:
-                _wait_for_paint(grid)
-                added = absorb()
-                if added:
-                    gained += added
-                    revealed = True
-                    break
-            if not revealed:
-                break
+            _wait_for_paint(grid)
+            gained += absorb()
         return gained
 
     _scroll(grid, "top")
@@ -181,6 +196,5 @@ def collect_virtualized_rows(
     while time.monotonic() < deadline:
         if not _scroll(grid, "page"):
             break
-        if sweep_horizontal() == 0:
-            break
+        sweep_horizontal()
     return list(found.values())

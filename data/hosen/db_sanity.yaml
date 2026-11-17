@@ -1,59 +1,538 @@
 hosen_dashboard:
+  # ==========================================
+  # מסך 1: תמ"צ ארצי (Screen 1 Landing)
+  # ==========================================
   screen_1_landing:
+    title: "תמ״צ התנהגות - תמ״צ ארצי - דיווחי קה״א יקל״ר"
+    date: "08/06/2026"
+    filters:
+      district: "מחוז דרום"
+      subdistrict: "נפת לכיש"
     survey_status:
-      submitted: 0
-      total: 259
+      submitted: "7"
+      total: "12"
       missing_authorities:
-      - אבו גוש
-      - אבו סנאן
-      - אבן יהודה
-      - אום אל-פחם
-      - אופקים
-      - אור יהודה
-      - אור עקיבא
-      - אורנית
-      - אזור
-      - אילת
-      - אכסאל
-      - אל בטוף
-      - אל קסום
-      - אלונה
-      - אליכין
-      - אלעד
-      - אלפי מנשה
-      - אלקנה
-      - אעבלין
-      - אפרת
+        - "אשקלון"
+        - "חבל יבנה"
+        - "חוף אשקלון"
+        - "יואב"
+        - "שפיר"
     kpis:
       national_average:
-        title: הערכת קה"א - ממוצע ארצי
-        percentage: (ריק)
-        trend: ''
+        title: 'הערכת קה"א - ממוצע ארצי'
+        percentage: '83%' # הושאר על 80% לפי התמונה
+        trend: 'up'
       categories:
-      - title: מנהיגות
-        percentage: (ריק)
-        trend: ''
-      - title: דאגה לרווחה
-        percentage: (ריק)
-        trend: ''
-      - title: התנהגות אפקטיבית
-        percentage: (ריק)
-        trend: ''
-      - title: שייכות וסולידריות
-        percentage: (ריק)
-        trend: ''
-      - title: רציפות תפקודית
-        percentage: (ריק)
-        trend: ''
-      - title: נרטיב
-        percentage: (ריק)
-        trend: ''
-      - title: מיצוי משאבי קהילה
-        percentage: (ריק)
-        trend: ''
-      - title: מידע ותקשורת
-        percentage: (ריק)
-        trend: ''
-    resilience_scores: []
-    active_filters:
-      date: היום
+        - title: "מנהיגות"
+          score: "88%"
+          trend_direction: "up"
+        - title: "דאגה לרווחה"
+          score: "81%"
+          trend_direction: "up"
+        - title: "התנהגות אפקטיבית"
+          score: "89%"
+          trend_direction: "up"
+        - title: "שייכות וסולידריות"
+          score: "89%"
+          trend_direction: "up"
+        - title: "רציפות תפקודית"
+          score: "66%"
+          trend_direction: "up"
+        - title: "נרטיב"
+          score: "88%"
+          trend_direction: "up"
+        - title: "מיצוי משאבי קהילה"
+          score: "71%"
+          trend_direction: "up"
+        - title: "מידע ותקשורת"
+          score: "91%"
+          trend_direction: "up"
+    resilience_scores:
+      - authority: "קרית מלאכי"
+        score: "64%"
+      - authority: 'בני עי"ש'
+        score: "66%"
+      - authority: "אשדוד"
+        score: "73%"
+      - authority: "קרית גת"
+        score: "89%"
+      - authority: "לכיש"
+        score: "90%"
+      - authority: "באר טוביה"
+        score: "100%"
+      - authority: "גן יבנה"
+        score: "100%"
+
+  # ==========================================
+  # מסך 2: תחקור (Screen 2 Investigation)
+  # ==========================================
+  screen_2_investigation:
+    title: "תמ״צ התנהגות - מסך תחקור"
+    date: "08/06/2026"
+    filters:
+      district: "מחוז דרום"
+      subdistrict: "נפת לכיש"
+    
+    tables:
+      # טבלת מגמות לפי תאריך (דורש לחצן ימני -> הצג טבלה)
+      trends_by_date_table:
+      - creation_date: "09/03/2026"
+        leadership: "87%"
+        welfare: "86%"
+        effective_behavior: "81%"
+        belonging: "84%"
+        resilience_score: "82%"
+        functional_continuity: "63%"
+        narrative: "88%"
+        community_resources: "83%"
+        information: "88%"
+      - creation_date: "10/03/2026"
+        leadership: "89%"
+        welfare: "89%"
+        effective_behavior: "85%"
+        belonging: "85%"
+        resilience_score: "84%"
+        functional_continuity: "66%"
+        narrative: "86%"
+        community_resources: "84%"
+        information: "90%"
+      - creation_date: "11/03/2026"
+        leadership: "88%"
+        welfare: "84%"
+        effective_behavior: "84%"
+        belonging: "86%"
+        resilience_score: "83%"
+        functional_continuity: "68%"
+        narrative: "85%"
+        community_resources: "80%"
+        information: "87%"
+      - creation_date: "12/03/2026"
+        leadership: "92%"
+        welfare: "87%"
+        effective_behavior: "86%"
+        belonging: "84%"
+        resilience_score: "85%"
+        functional_continuity: "73%"
+        narrative: "89%"
+        community_resources: "81%"
+        information: "91%"
+      - creation_date: "13/03/2026"
+        leadership: "88%"
+        welfare: "86%"
+        effective_behavior: "83%"
+        belonging: "86%"
+        resilience_score: "83%"
+        functional_continuity: "67%"
+        narrative: "88%"
+        community_resources: "81%"
+        information: "88%"
+
+        
+      # טבלת פירוט רשויות (הטבלה התחתונה במסך)
+      authorities_breakdown_table:
+        - authority: "אשדוד"
+          leadership: "67%"
+          welfare: "75%"
+          effective_behavior: "75%"
+          belonging: "83%"
+          functional_continuity: "38%"
+          narrative: "100%"
+          community_resources: "75%"
+          information: "75%"
+          resilience_score: "73%"
+        - authority: "אשקלון"
+          leadership: "0%"
+          welfare: "0%"
+          effective_behavior: "0%"
+          belonging: "0%"
+          functional_continuity: "0%"
+          narrative: "0%"
+          community_resources: "0%"
+          information: "0%"
+          resilience_score: "0%"
+        - authority: "באר טוביה"
+          leadership: "100%"
+          welfare: "100%"
+          effective_behavior: "100%"
+          belonging: "100%"
+          functional_continuity: "100%"
+          narrative: "100%"
+          community_resources: "100%"
+          information: "100%"
+          resilience_score: "100%"
+        - authority: 'בני עי"ש'
+          leadership: "58%"
+          welfare: "75%"
+          effective_behavior: "83%"
+          belonging: "83%"
+          functional_continuity: "50%"
+          narrative: "50%"
+          community_resources: "50%"
+          information: "75%"
+          resilience_score: "66%"
+        - authority: "גן יבנה"
+          leadership: "100%"
+          welfare: "100%"
+          effective_behavior: "100%"
+          belonging: "100%"
+          functional_continuity: "100%"
+          narrative: "100%"
+          community_resources: "100%"
+          information: "100%"
+          resilience_score: "100%"
+        - authority: "חבל יבנה"
+          leadership: "0%"
+          welfare: "0%"
+          effective_behavior: "0%"
+          belonging: "0%"
+          functional_continuity: "0%"
+          narrative: "0%"
+          community_resources: "0%"
+          information: "0%"
+          resilience_score: "0%"
+        - authority: "חוף אשקלון"
+          leadership: "0%"
+          welfare: "0%"
+          effective_behavior: "0%"
+          belonging: "0%"
+          functional_continuity: "0%"
+          narrative: "0%"
+          community_resources: "0%"
+          information: "0%"
+          resilience_score: "0%"
+        - authority: "יואב"
+          leadership: "0%"
+          welfare: "0%"
+          effective_behavior: "0%"
+          belonging: "0%"
+          functional_continuity: "0%"
+          narrative: "0%"
+          community_resources: "0%"
+          information: "0%"
+          resilience_score: "0%"
+        - authority: "לכיש"
+          leadership: "100%"
+          welfare: "100%"
+          effective_behavior: "100%"
+          belonging: "92%"
+          functional_continuity: "50%"
+          narrative: "92%"
+          community_resources: "83%"
+          information: "100%"
+          resilience_score: "90%"
+        - authority: "קרית גת"
+          leadership: "100%"
+          welfare: "100%"
+          effective_behavior: "83%"
+          belonging: "100%"
+          functional_continuity: "75%"
+          narrative: "100%"
+          community_resources: "50%"
+          information: "100%"
+          resilience_score: "89%"
+        - authority: "קרית מלאכי"
+          leadership: "92%"
+          welfare: "17%"
+          effective_behavior: "83%"
+          belonging: "67%"
+          functional_continuity: "50%"
+          narrative: "75%"
+          community_resources: "42%"
+          information: "88%"
+          resilience_score: "64%"
+        - authority: "שפיר"
+          leadership: "0%"
+          welfare: "0%"
+          effective_behavior: "0%"
+          belonging: "0%"
+          functional_continuity: "0%"
+          narrative: "0%"
+          community_resources: "0%"
+          information: "0%"
+          resilience_score: "0%"
+        
+      # שורת הסיכום (ממוצעים)
+      totals_row:
+        leadership: "88%"
+        welfare: "81%"
+        effective_behavior: "89%"
+        belonging: "89%"
+        functional_continuity: "66%"
+        narrative: "88%"
+        community_resources: "71%"
+        information: "91%"
+        resilience_score: "83%"
+
+      
+
+    # ==========================================
+  # מסך 3: תחקור גיאוגרפי (Screen 3 Geographic Investigation)
+  # ==========================================
+  screen_3_geographic_investigation:
+    title: "תמ״צ התנהגות - תחקור גיאוגרפי"
+    date_range:
+      start: "01/01/2026" #[cite: 1]
+      end: "31/03/2026" #[cite: 1]
+    filters: #[cite: 1]
+      level_selected: "מחוז" 
+      district: "מחוז דרום"
+      subdistrict: "נפת לכיש"
+      authority: null
+    graphs:
+      final_resilience_score:
+        title: "ציון חוסן סופי - שבועיים אחרונים בטווח המסונן" #[cite: 1]
+        legend: "מחוז דרום" #[cite: 1]
+        data: #[cite: 1]
+          - date: "18/03/2026"
+            score: "85%"
+          - date: "19/03/2026"
+            score: "84%"
+          - date: "20/03/2026"
+            score: "84%"
+          - date: "21/03/2026"
+            score: "86%"
+          - date: "22/03/2026"
+            score: "84%"
+          - date: "23/03/2026"
+            score: "85%"
+          - date: "24/03/2026"
+            score: "85%"
+          - date: "25/03/2026"
+            score: "85%"
+          - date: "26/03/2026"
+            score: "86%"
+          - date: "27/03/2026"
+            score: "85%"
+          - date: "28/03/2026"
+            score: "86%"
+          - date: "29/03/2026"
+            score: "84%"
+          - date: "30/03/2026"
+            score: "84%"
+          - date: "31/03/2026"
+            score: "83%"
+            
+      categories:
+        - title: "דאגה לרווחה"
+          data:
+            - date: "25/03/2026"
+              score: "87%"
+            - date: "26/03/2026"
+              score: "88%"
+            - date: "27/03/2026"
+              score: "87%"
+            - date: "28/03/2026"
+              score: "88%"
+            - date: "29/03/2026"
+              score: "85%"
+            - date: "30/03/2026"
+              score: "86%"
+            - date: "31/03/2026"
+              score: "85%"
+              
+        - title: "מנהיגות"
+          data:
+            - date: "25/03/2026"
+              score: "87%"
+            - date: "26/03/2026"
+              score: "88%"
+            - date: "27/03/2026"
+              score: "88%"
+            - date: "28/03/2026"
+              score: "88%"
+            - date: "29/03/2026"
+              score: "85%"
+            - date: "30/03/2026"
+              score: "86%"
+            - date: "31/03/2026"
+              score: "85%"
+        - title: "שייכות וסולידריות"
+          data:
+            - date: "25/03/2026"
+              score: "85%"
+            - date: "26/03/2026"
+              score: "86%"
+            - date: "27/03/2026"
+              score: "86%"
+            - date: "28/03/2026"
+              score: "90%"
+            - date: "29/03/2026"
+              score: "84%"
+            - date: "30/03/2026"
+              score: "84%"
+            - date: "31/03/2026"
+              score: "87%"
+          
+        - title: "התנהגות אפקטיבית"
+          data:
+            - date: "25/03/2026"
+              score: "85%"
+            - date: "26/03/2026"
+              score: "86%"
+            - date: "27/03/2026"
+              score: "88%"
+            - date: "28/03/2026"
+              score: "90%"
+            - date: "29/03/2026"
+              score: "85%"
+            - date: "30/03/2026"
+              score: "86%"
+            - date: "31/03/2026"
+              score: "84%"
+          
+        - title: "נרטיב"
+          data:
+            - date: "25/03/2026"
+              score: "90%"
+            - date: "26/03/2026"
+              score: "91%"
+            - date: "27/03/2026"
+              score: "89%"
+            - date: "28/03/2026"
+              score: "92%"
+            - date: "29/03/2026"
+              score: "88%"
+            - date: "30/03/2026"
+              score: "88%"
+            - date: "31/03/2026"
+              score: "88%"
+          
+        - title: "רציפות תפקודית"
+          data:
+            - date: "25/03/2026"
+              score: "75%"
+            - date: "26/03/2026"
+              score: "77%"
+            - date: "27/03/2026"
+              score: "75%"
+            - date: "28/03/2026"
+              score: "70%"
+            - date: "29/03/2026"
+              score: "75%"
+            - date: "30/03/2026"
+              score: "73%"
+            - date: "31/03/2026"
+              score: "71%"
+          
+        - title: "מידע ותקשורת"
+          data:
+            - date: "25/03/2026"
+              score: "90%"
+            - date: "26/03/2026"
+              score: "90%"
+            - date: "27/03/2026"
+              score: "89%"
+            - date: "28/03/2026"
+              score: "91%"
+            - date: "29/03/2026"
+              score: "88%"
+            - date: "30/03/2026"
+              score: "89%"
+            - date: "31/03/2026"
+              score: "88%"
+          
+        - title: "מיצוי משאבי קהילה"
+          data:
+            - date: "25/03/2026"
+              score: "81%"
+            - date: "26/03/2026"
+              score: "83%"
+            - date: "27/03/2026"
+              score: "83%"
+            - date: "28/03/2026"
+              score: "81%"
+            - date: "29/03/2026"
+              score: "80%"
+            - date: "30/03/2026"
+              score: "80%"
+            - date: "31/03/2026"
+              score: "79%"
+  
+  # ==========================================
+  # מסך 4: ייצוא נתונים לאקסל (Screen 4 Excel Export)
+  # ==========================================
+  screen_4_excel_export:
+    title: "תמ״צ התנהגות - ייצוא נתונים לאקסל" #[cite: 2]
+    date: "08/06/2026" #[cite: 2]
+    filters:
+      sector: null #[cite: 2]
+      district: "מחוז דרום" #[cite: 2]
+      subdistrict: "נפת לכיש" #[cite: 2]
+      authority: null #[cite: 2]
+    data_table:
+      - authority: "אשדוד" #[cite: 2]
+        care_for_welfare: "75.0%" #[cite: 2]
+        effective_behavior: "75.0%" #[cite: 2]
+        information_and_communication: "75.0%" #[cite: 2]
+        community_resources: "75.0%" #[cite: 2]
+        leadership: "66.7%" #[cite: 2]
+        narrative: "100.0%" #[cite: 2]
+        final_score: "73.4%" #[cite: 2]
+        functional_continuity: "37.5%" #[cite: 2]
+        belonging_and_solidarity: "83.3%" #[cite: 2]
+        
+      - authority: "באר טוביה" #[cite: 2]
+        care_for_welfare: "100.0%" #[cite: 2]
+        effective_behavior: "100.0%" #[cite: 2]
+        information_and_communication: "100.0%" #[cite: 2]
+        community_resources: "100.0%" #[cite: 2]
+        leadership: "100.0%" #[cite: 2]
+        narrative: "100.0%" #[cite: 2]
+        final_score: "100.0%" #[cite: 2]
+        functional_continuity: "100.0%" #[cite: 2]
+        belonging_and_solidarity: "100.0%" #[cite: 2]
+        
+      - authority: 'בני עי"ש' #[cite: 2]
+        care_for_welfare: "75.0%" #[cite: 2]
+        effective_behavior: "83.3%" #[cite: 2]
+        information_and_communication: "75.0%" #[cite: 2]
+        community_resources: "50.0%" #[cite: 2]
+        leadership: "58.3%" #[cite: 2]
+        narrative: "50.0%" #[cite: 2]
+        final_score: "65.6%" #[cite: 2]
+        functional_continuity: "50.0%" #[cite: 2]
+        belonging_and_solidarity: "83.3%" #[cite: 2]
+        
+      - authority: "גן יבנה" #[cite: 2]
+        care_for_welfare: "100.0%" #[cite: 2]
+        effective_behavior: "100.0%" #[cite: 2]
+        information_and_communication: "100.0%" #[cite: 2]
+        community_resources: "100.0%" #[cite: 2]
+        leadership: "100.0%" #[cite: 2]
+        narrative: "100.0%" #[cite: 2]
+        final_score: "100.0%" #[cite: 2]
+        functional_continuity: "100.0%" #[cite: 2]
+        belonging_and_solidarity: "100.0%" #[cite: 2]
+        
+      - authority: "לכיש" #[cite: 2]
+        care_for_welfare: "100.0%" #[cite: 2]
+        effective_behavior: "100.0%" #[cite: 2]
+        information_and_communication: "100.0%" #[cite: 2]
+        community_resources: "83.3%" #[cite: 2]
+        leadership: "100.0%" #[cite: 2]
+        narrative: "91.7%" #[cite: 2]
+        final_score: "89.6%" #[cite: 2]
+        functional_continuity: "50.0%" #[cite: 2]
+        belonging_and_solidarity: "91.7%" #[cite: 2]
+        
+      - authority: "קרית גת" #[cite: 2]
+        care_for_welfare: "100.0%" #[cite: 2]
+        effective_behavior: "83.3%" #[cite: 2]
+        information_and_communication: "100.0%" #[cite: 2]
+        community_resources: "50.0%" #[cite: 2]
+        leadership: "100.0%" #[cite: 2]
+        narrative: "100.0%" #[cite: 2]
+        final_score: "88.5%" #[cite: 2]
+        functional_continuity: "75.0%" #[cite: 2]
+        belonging_and_solidarity: "100.0%" #[cite: 2]
+        
+      - authority: "קרית מלאכי" #[cite: 2]
+        care_for_welfare: "16.7%" #[cite: 2]
+        effective_behavior: "83.3%" #[cite: 2]
+        information_and_communication: "87.5%" #[cite: 2]
+        community_resources: "41.7%" #[cite: 2]
+        leadership: "91.7%" #[cite: 2]
+        narrative: "75.0%" #[cite: 2]
+        final_score: "64.1%" #[cite: 2]
+        functional_continuity: "50.0%" #[cite: 2]
+        belonging_and_solidarity: "66.7%" #[cite: 2]

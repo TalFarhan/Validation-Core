@@ -13,7 +13,7 @@ _GOLDEN_RECORD = (
 )
 _BIDI_MARKS = ("\u200f", "\u200e", "\u202a", "\u202b", "\u202c")
 _ROOT = "hosen_dashboard"
-_BLOCKS = ("survey_status", "kpis", "resilience_scores", "active_filters")
+_BLOCKS = ("survey_status", "kpis", "resilience_scores", "filters")
 _ROW_KEY = {
     "categories": "title",
     "resilience_scores": "authority",
@@ -115,10 +115,18 @@ def _assert_tree(yaml_path: str, actual, expected) -> None:
 def test_hosen_screen1_matches_golden(hosen_status_dashboard):
     """Screen 1 survey, KPIs, resilience rows, and filters match the golden block."""
     page = hosen_status_dashboard
+    expected = load_sanity_data().get("screen_1_landing") or {}
+    report_date = expected.get("date")
+    if report_date:
+        page.select_screen_1_filter("date", str(report_date))
+    filters = expected.get("filters", {})
+    for slicer_id, value in filters.items():
+        page.select_screen_1_filter(str(slicer_id), str(value))
+    # Read metrics only after every golden filter has been applied.
+    page.wait_for_screen_1_idle()
     actual = page.read_screen_1_metrics()
     for key in _BLOCKS:
         assert key in actual, f"{_ROOT}.screen_1_landing.{key}: ui='missing'"
-    expected = load_sanity_data().get("screen_1_landing") or {}
     skipped: list[str] = []
     checked: list[str] = []
     for key, value in expected.items():

@@ -233,20 +233,38 @@ UI נקרא דרך Layer 2 (`KPI.number` / `KPI.read_text` / `KPI.scale` / `Char
 
 ---
 
-## 11. דשבורד תמ״צ חוסן — UI Sanity (מסך נחיתה)
+## 11. דשבורד תמ״צ חוסן — UI Sanity
 
-בדיקות מול `data/hosen/db_sanity.yaml`. אין לקוח מחסן ואין `db/clients/hosen.py`. המקור הוא קובץ הזהב, לא SQL. מסך 1 הוא המסך שנפתח בלי מעבר טאב. עשן הטריות נשאר `verify_freshness()`.
+בדיקות מול `data/hosen/db_sanity.yaml`. אין לקוח מחסן ואין `db/clients/hosen.py`. המקור הוא קובץ הזהב, לא SQL. מסך 1 הוא המסך שנפתח בלי מעבר טאב. לפני הקריאה, `select_screen_1_filter` בוחר כל ערך תחת `filters`. מסך 2 נפתח אחר כך עם `open_investigation_screen`. מסך 3 נפתח עם `open_geographic_screen`. מסך 4 נפתח עם `open_excel_export_screen` וקורא את הטבלה שעל המסך, בלי הורדת קובץ. עשן הטריות נשאר `verify_freshness()`.
 
 | מפתח ב-YAML | שיטה בדף | טסט |
 |-------------|----------|------|
 | `survey_status` | `HosenStatusPage.read_screen_1_metrics()` | `test_hosen_screen1_matches_golden` |
 | `kpis` | `read_screen_1_metrics()` (`KPI` כשהכותרת על הכרטיס, אחרת מסמך הוויזואל) | `test_hosen_screen1_matches_golden` |
 | `resilience_scores` | `read_screen_1_metrics()` (`collect_virtualized_rows` על `ציון חוסן`) | `test_hosen_screen1_matches_golden` |
-| `active_filters` | `read_screen_1_metrics()` (`Slicer.control`) | `test_hosen_screen1_matches_golden` |
+| `filters` | `select_screen_1_filter` לכל ערך ב-`filters`, ואז `read_screen_1_metrics()` (`Slicer.select` / `Slicer.control`) | `test_hosen_screen1_matches_golden` |
+| `screen_2_investigation.title` | `open_investigation_screen` / `read_screen_2_metrics()` | `test_hosen_screen2_matches_golden` |
+| `screen_2_investigation.date` | `select_screen_2_filter("date", ...)` ואז `read_screen_2_metrics()` | `test_hosen_screen2_matches_golden` |
+| `screen_2_investigation.filters` | `select_screen_2_filter` לכל מזהה, ואז `read_screen_2_metrics()` | `test_hosen_screen2_matches_golden` |
+| `tables.authorities_breakdown_table` | `read_screen_2_metrics()` (`collect_virtualized_rows`) | `test_hosen_screen2_matches_golden` |
+| `tables.totals_row` | `read_screen_2_metrics()` | `test_hosen_screen2_matches_golden` |
+| `tables.trends_by_date_table` | `read_screen_2_metrics()` (`VisualTable.read_rows` על `vcGroupBody` מ-`_mark_visual_host`) | `test_hosen_screen2_matches_golden` |
+| `screen_3_geographic_investigation.title` | `open_geographic_screen` / `read_screen_3_metrics()` | `test_hosen_screen3_matches_golden` |
+| `screen_3_geographic_investigation.date_range` | `select_screen_3_date_range` ואז `read_screen_3_metrics()` | `test_hosen_screen3_matches_golden` |
+| `screen_3_geographic_investigation.filters` | `select_screen_3_filter` לכל ערך שאינו `null`, ואז `read_screen_3_metrics()` | `test_hosen_screen3_matches_golden` |
+| `graphs.final_resilience_score` | `read_screen_3_metrics()` (`VisualTable.read_rows` על `vcGroupBody` מ-`_mark_visual_host`) | `test_hosen_screen3_matches_golden` |
+| `graphs.categories` | `read_screen_3_metrics()` (`VisualTable.read_rows` על `vcGroupBody` מ-`_mark_visual_host`) | `test_hosen_screen3_matches_golden` |
+| `screen_4_excel_export.title` | `open_excel_export_screen` / `read_screen_4_metrics()` | `test_hosen_screen4_matches_golden` |
+| `screen_4_excel_export.date` | `select_screen_4_filter("date", ...)` ואז `read_screen_4_metrics()` | `test_hosen_screen4_matches_golden` |
+| `screen_4_excel_export.filters` | `select_screen_4_filter` לכל ערך שאינו `null`, ואז `read_screen_4_metrics()` | `test_hosen_screen4_matches_golden` |
+| `data_table` | `read_screen_4_metrics()` (`collect_virtualized_rows`) | `test_hosen_screen4_matches_golden` |
 
 מיפוי בקוד:
 
 - דף: `pages/hosen_status/page.py` (`HosenStatusPage`)
 - מתקן: `tests/sanity/hosen_status_dashboard/conftest.py`
-- טסט: `tests/sanity/hosen_status_dashboard/test_screen1_sanity.py`
+- טסט מסך 1: `tests/sanity/hosen_status_dashboard/test_screen1_sanity.py`
+- טסט מסך 2: `tests/sanity/hosen_status_dashboard/test_screen2_sanity.py`
+- טסט מסך 3: `tests/sanity/hosen_status_dashboard/test_screen3_sanity.py`
+- טסט מסך 4: `tests/sanity/hosen_status_dashboard/test_screen4_sanity.py`
 - עשן טריות: `tests/ui/hosen_status_dashboard/test_dashboard_smoke.py`
