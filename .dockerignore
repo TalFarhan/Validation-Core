@@ -13,10 +13,13 @@ build/
 
 # Local secrets / saved sessions (mount at runtime instead of copying in).
 .env
+.env*
 auth_state.json
 
 # Test artifacts are produced inside the container and exported via a volume.
 results/
+result/
+result_arc/
 test-results/
 allure-results/
 allure-report/
@@ -28,11 +31,13 @@ report.html
 .DS_Store
 Thumbs.db
 *.log
+*.log*
 *.tmp
 *.swp
 
 # Docker files themselves.
 Dockerfile
+Dockerfile*
 docker-compose.yml
 .dockerignore
 

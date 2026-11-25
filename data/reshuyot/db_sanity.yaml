@@ -1,130 +1,132 @@
 dashboard:
   screen_1_national_status:
     title: "הערכת מצב רשויות"
-    date: "10/03/2026"
+    date: "15/06/2025"
     filters:
-      district: "מחוז צפון"
-      sub_district: "נפת חירם"
-      sub_district: "נפת נפתלי"
+      district: "מחוז חיפה"
+      sub_district:
+        - "נפת גדור"
 
     survey_status:
-      filled: 24
-      out_of: 23
+      filled: 18
+      out_of: 18
+      
     authorities_status:
       coping_well:
-        count: 22
+        count: 16
         authorities:
-        - name: "בועיינה-נוג'ידאת"
-          score: 93.0
-        - name: "גליל עליון"
-          score: 86.9
-        - name: "גליל תחתון"
-          score: 92.4
-          trend: "up"
-        - name: "ג'ש (גוש חלב)"
-          score: 89.7
-          trend: "up"
-        - name: "דייר חנא"
-          score: 96.0
-        - name: "חצור הגלילית"
-          score: 96.7
-        - name: "טובא-זנגריה"
-          score: 83.8
-        - name: "יבנאל"
-          score: 82.7
-          trend: "up"
-        - name: "יסוד המעלה"
-          score: 94.6
-        - name: "כפר כמא"
-          score: 93.1
-        - name: "מבואות החרמון"
-          score: 90.3
-        - name: "מגאר"
-          score: 88.9
-        - name: "מרום הגליל"
-          score: 87.1
-        - name: "נחף"
-          score: 89.8
-          trend: "down"
-        - name: "סאג'ור"
-          score: 90.3
-          trend: "up"
-        - name: "סח'נין"
-          score: 83.0
-          trend: "down"
-        - name: "ע'גר"
-          score: 97.8
-        - name: "עילבון"
-          score: 94.9
-        - name: "צפת"
-          score: 88.4
-        - name: "קרית שמונה"
-          score: 95.3
-        - name: "ראמה"
-          score: 91.8 
-        - name: "ראש פינה"
-          score: 97.8
+          - name: "אום אל-פחם"
+            score: 88.5
+            trend: "down"
+          - name: "אור עקיבא"
+            score: 88.8
+          - name: "אלונה"
+            score: 91.1
+            trend: "down"
+          - name: "באקה אל-גרביה"
+            score: 90.0
+            trend: "down"
+          - name: "בנימינה-גבעת עדה"
+            score: 93.1
+            trend: "down"
+          - name: 'בסמ"ה'
+            score: 95.2
+            trend: "up"
+          - name: "ג'סר א-זרקא"
+            score: 93.7
+            trend: "down"
+          - name: "ג'ת"
+            score: 90.1
+            trend: "down"
+          - name: "זכרון יעקב"
+            score: 89.5
+            trend: "down"
+          - name: "חדרה"
+            score: 88.8
+            trend: "down"
+          - name: "חוף הכרמל"
+            score: 95.5
+            trend: "down"
+          - name: "חריש"
+            score: 89.4
+            trend: "down"
+          - name: "מנשה"
+            score: 93.7
+            trend: "down"
+          - name: "מעלה עירון"
+            score: 84.4
+            trend: "up"
+          - name: "ערערה"
+            score: 88.7
+            trend: "up"
+          - name: "פרדס חנה-כרכור"
+            score: 82.5
+            trend: "down"
 
       may_struggle:
-        count: 1
+        count: 2
         authorities:
-        - name: "עראבה"
-          score: 75.2
+          - name: "כפר קרע"
+            score: 69.3
+            trend: "down"
+          - name: "פוריידיס"
+            score: 77.6
+            trend: "down"
+            
       struggling:
         count: 0
         authorities: []
+        
     facilities:
       operation_centers:
-        unknown_in: 3
+        unknown_in: 0
         open:
-          count: 17
+          count: 18
           authorities:
-          - "בועיינה-נוג'ידאת"
-          - "גליל עליון"
-          - "ג'ש (גוש חלב)"
-          - "חצור הגלילית"
-          - "יסוד המעלה"
-          - "כפר כמא"
+            - "אום אל-פחם"
+            - "אור עקיבא"
+            - "אלונה"
+            - "באקה אל-גרביה"
+            - "בנימינה-גבעת עדה"
+            - 'בסמ"ה'
         closed:
-          count: 3
-          authorities:
-          - "עראבה"
-          - "נחף"
-          - "טובא-זנגריה"
+          count: 0
+          authorities: []
+            
       protection_facilities:
-        partially_open_count: 2
+        partially_open_count: 1
         open:
-          count: 20
+          count: 15
           authorities:
-          - "בועיינה-נוג'ידאת"
-          - "גליל עליון"
-          - "גליל תחתון"
-          - "ג'ש (גוש חלב)"
-          - "דייר חנא"
+            - "אום אל-פחם"
+            - "אור עקיבא"
+            - "אלונה"
+            - "באקה אל-גרביה"
+            - "בנימינה-גבעת עדה"
         closed:
-          count: 1
+          count: 2
           authorities:
-          - "טובא-זנגריה"
+            - "חריש"
+            - "כפר קרע"
+          
       call_centers_106:
         open:
-          count: 19
+          count: 16
           authorities:
-          - "גליל עליון"
-          - "גליל תחתון"
-          - "ג'ש (גוש חלב)"
-          - "דייר חנא"
-          - "חצור הגלילית"
+            - "אום אל-פחם"
+            - "אור עקיבא"
+            - "באקה אל-גרביה"
+            - "בנימינה-גבעת עדה"
+            - 'בסמ"ה'
         closed:
-          count: 4
+          count: 2
           authorities:
-          - "בועיינה-נוג'ידאת"
-          - "טובא-זנגריה"
-          - "סאג'ור"
-          - "עראבה"
+            - "אלונה"
+            - "פוריידיס"
+            
     missing_daily_report:
-      count: 1
-      authorities:
-      - "מטולה"
+      count: 0
+      authorities: []
 
   screen_2_service_targets:
     title: 'הערכת מצב רשויות - תמ"צ יעדי השירות'

@@ -268,3 +268,40 @@ UI נקרא דרך Layer 2 (`KPI.number` / `KPI.read_text` / `KPI.scale` / `Char
 - טסט מסך 3: `tests/sanity/hosen_status_dashboard/test_screen3_sanity.py`
 - טסט מסך 4: `tests/sanity/hosen_status_dashboard/test_screen4_sanity.py`
 - עשן טריות: `tests/ui/hosen_status_dashboard/test_dashboard_smoke.py`
+
+---
+
+## 12. דשבורד הערכת מצב רשויות — UI Sanity (מסך 1 ומסך 2)
+
+בדיקות מול `data/reshuyot/db_sanity.yaml`. אין לקוח מחסן. המקור הוא קובץ הזהב, לא SQL. `title` נשאר בקובץ ואינו נבדק: במסך 1 הוא מדולג, במסך 2 הוא יעד ניווט בלבד (`open_screen_2`). `grade_trends` בקובץ הוא null; שורות המגמה נטענות כמפתח אח `data`. עשן הטריות נשאר `verify_freshness()`.
+
+### מסך 1 — `dashboard.screen_1_national_status`
+
+| מפתח ב-YAML | שיטה בדף | טסט |
+|-------------|----------|------|
+| `date` | `select_screen_1_filter("date", ...)` ואז `read_screen_1_metrics()` | `test_authorities_screen1_matches_golden` |
+| `filters` | `select_screen_1_filter` לכל ערך (רשימה = בחירה לכל פריט), ואז `read_screen_1_metrics()` | `test_authorities_screen1_matches_golden` |
+| `survey_status` | `read_screen_1_metrics()` | `test_authorities_screen1_matches_golden` |
+| `authorities_status` | `read_screen_1_metrics()` | `test_authorities_screen1_matches_golden` |
+| `facilities` | `read_screen_1_metrics()` | `test_authorities_screen1_matches_golden` |
+| `missing_daily_report` | `read_screen_1_metrics()` | `test_authorities_screen1_matches_golden` |
+
+### מסך 2 — `dashboard.screen_2_service_targets`
+
+| מפתח ב-YAML | שיטה בדף | טסט |
+|-------------|----------|------|
+| `title` | `open_screen_2(title)` (ניווט בלבד, לא נטען ב-walk) | `test_authorities_screen2_matches_golden` |
+| `date` | `select_screen_2_filter("date", ...)` ואז `read_screen_2_metrics()` | `test_authorities_screen2_matches_golden` |
+| `filters` | `select_screen_2_filter` לכל ערך (מחרוזת = בחירה אחת, רשימה = בחירה לכל פריט), ואז `read_screen_2_metrics()` | `test_authorities_screen2_matches_golden` |
+| `sector_profile` | `read_screen_2_metrics()` | `test_authorities_screen2_matches_golden` |
+| `protection_data` | `read_screen_2_metrics()` | `test_authorities_screen2_matches_golden` |
+| `service_targets` | `read_screen_2_metrics()` (`collect_virtualized_rows` כשהרשימה היא גריד) | `test_authorities_screen2_matches_golden` |
+| `data` | `read_screen_2_metrics()` (`VisualTable.read_rows` על גוף הוויזואל) | `test_authorities_screen2_matches_golden` |
+
+מיפוי בקוד:
+
+- דף: `pages/authorities_status/page.py` (`AuthoritiesStatusPage`)
+- מתקן: `tests/sanity/authorities_status_dashboard/conftest.py`
+- טסט מסך 1: `tests/sanity/authorities_status_dashboard/test_screen1_sanity.py`
+- טסט מסך 2: `tests/sanity/authorities_status_dashboard/test_screen2_sanity.py`
+- עשן טריות (לא חלק מהרשומה): `tests/ui/authorities_status_dashboard/test_dashboard_smoke.py`
